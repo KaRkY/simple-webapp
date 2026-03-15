@@ -31,6 +31,7 @@
 		<java.version>25</java.version>
 		<spring-modulith.version>2.0.3</spring-modulith.version>
 		<jmolecules.version>2025.0.2</jmolecules.version>
+		<testcontainers-jooq-codegen-maven-plugin.version>0.0.4</testcontainers-jooq-codegen-maven-plugin.version>
 	</properties>
 
 	<!-- ========================================================= -->
@@ -284,6 +285,99 @@
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
+			</plugin>
+
+			<plugin>
+				<groupId>org.testcontainers</groupId>
+				<artifactId>testcontainers-jooq-codegen-maven-plugin</artifactId>
+				<version>${testcontainers-jooq-codegen-maven-plugin.version}</version>
+				<dependencies>
+					<dependency>
+						<groupId>org.jooq</groupId>
+						<artifactId>jooq-codegen</artifactId>
+						<version>${jooq.version}</version>
+					</dependency>
+
+					<dependency>
+						<groupId>org.testcontainers</groupId>
+						<artifactId>testcontainers</artifactId>
+						<version>${testcontainers.version}</version>
+					</dependency>
+
+					<dependency>
+						<groupId>org.testcontainers</groupId>
+						<artifactId>testcontainers-postgresql</artifactId>
+						<version>${testcontainers.version}</version>
+					</dependency>
+					<dependency>
+						<groupId>org.postgresql</groupId>
+						<artifactId>postgresql</artifactId>
+						<version>${postgresql.version}</version>
+					</dependency>
+				</dependencies>
+				<executions>
+					<execution>
+						<id>generate-inventory</id>
+						<goals>
+							<goal>generate</goal>
+						</goals>
+						<phase>generate-sources</phase>
+						<configuration>
+							<database>
+								<type>POSTGRES</type>
+							</database>
+							<flyway>
+								<table>flyway_schema_history_inventory</table>
+								<locations>
+									filesystem:src/main/resources/db/migration/inventory
+								</locations>
+							</flyway>
+							<jooq>
+								<generator>
+									<database>
+										<includes>.*</includes>
+										<inputSchema>inventory</inputSchema>
+									</database>
+									<target>
+										<packageName>simple.simple_webapp.inventory</packageName>
+										<directory>target/generated-sources/jooq</directory>
+									</target>
+								</generator>
+							</jooq>
+						</configuration>
+					</execution>
+
+					<execution>
+						<id>generate-order</id>
+						<goals>
+							<goal>generate</goal>
+						</goals>
+						<phase>generate-sources</phase>
+						<configuration>
+							<database>
+								<type>POSTGRES</type>
+							</database>
+							<flyway>
+								<table>flyway_schema_history_order</table>
+								<locations>
+									filesystem:src/main/resources/db/migration/order
+								</locations>
+							</flyway>
+							<jooq>
+								<generator>
+									<database>
+										<includes>.*</includes>
+										<inputSchema>order</inputSchema>
+									</database>
+									<target>
+										<packageName>simple.simple_webapp.order</packageName>
+										<directory>target/generated-sources/jooq</directory>
+									</target>
+								</generator>
+							</jooq>
+						</configuration>
+					</execution>
+				</executions>
 			</plugin>
 
 			<!-- Documentation generation (Asciidoctor + PlantUML) -->
