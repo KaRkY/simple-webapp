@@ -1,0 +1,14 @@
+{
+  "name": "simple-webapp",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "build:css": "npx tailwindcss -c tailwind.config.js -i input.css -o ../target/classes/static/css/style.css --minify",
+    "watch:css": "npx tailwindcss -c tailwind.config.js -i input.css -o ../target/classes/static/css/style.css --watch"
+  },
+  "devDependencies": {
+    "@tailwindcss/cli": "^4.2.1",
+    "daisyui": "^5.5.19",
+    "tailwindcss": "^4.2.1"
+  }
+}

@@ -1,479 +1,524 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-		 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 
-	<modelVersion>4.0.0</modelVersion>
+    <modelVersion>4.0.0</modelVersion>
 
-	<!-- ========================================================= -->
-	<!-- Parent -->
-	<!-- ========================================================= -->
-	<parent>
-		<groupId>org.springframework.boot</groupId>
-		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>4.0.3</version>
-		<relativePath/>
-	</parent>
+    <!-- ========================================================= -->
+    <!-- Parent -->
+    <!-- ========================================================= -->
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>4.0.3</version>
+        <relativePath/>
+    </parent>
 
-	<!-- ========================================================= -->
-	<!-- Project Metadata -->
-	<!-- ========================================================= -->
-	<groupId>simple</groupId>
-	<artifactId>simple-webapp</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
-	<name>simple-webapp</name>
-	<description>Demo project for Spring Boot</description>
+    <!-- ========================================================= -->
+    <!-- Project Metadata -->
+    <!-- ========================================================= -->
+    <groupId>simple</groupId>
+    <artifactId>simple-webapp</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+    <name>simple-webapp</name>
+    <description>Demo project for Spring Boot</description>
 
-	<!-- ========================================================= -->
-	<!-- Properties -->
-	<!-- ========================================================= -->
-	<properties>
-		<java.version>25</java.version>
-		<spring-modulith.version>2.0.3</spring-modulith.version>
-		<jmolecules.version>2025.0.2</jmolecules.version>
-		<testcontainers-jooq-codegen-maven-plugin.version>0.0.4</testcontainers-jooq-codegen-maven-plugin.version>
-	</properties>
+    <!-- ========================================================= -->
+    <!-- Properties -->
+    <!-- ========================================================= -->
+    <properties>
+        <java.version>25</java.version>
+        <spring-modulith.version>2.0.3</spring-modulith.version>
+        <jmolecules.version>2025.0.2</jmolecules.version>
+        <testcontainers-jooq-codegen-maven-plugin.version>0.0.4</testcontainers-jooq-codegen-maven-plugin.version>
+    </properties>
 
-	<!-- ========================================================= -->
-	<!-- Dependencies -->
-	<!-- ========================================================= -->
-	<dependencies>
+    <!-- ========================================================= -->
+    <!-- Dependencies -->
+    <!-- ========================================================= -->
+    <dependencies>
 
-		<!-- ===================================================== -->
-		<!-- Spring Boot Web + MVC -->
-		<!-- Core web stack for controllers and MVC -->
-		<!-- ===================================================== -->
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-webmvc</artifactId>
-		</dependency>
+        <!-- ===================================================== -->
+        <!-- Spring Boot Web + MVC -->
+        <!-- Core web stack for controllers and MVC -->
+        <!-- ===================================================== -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-webmvc</artifactId>
+        </dependency>
 
-		<!-- ===================================================== -->
-		<!-- View Layer (Thymeleaf + HTMX) -->
-		<!-- Server side HTML rendering -->
-		<!-- ===================================================== -->
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-thymeleaf</artifactId>
-		</dependency>
+        <!-- ===================================================== -->
+        <!-- View Layer (Thymeleaf + HTMX) -->
+        <!-- Server side HTML rendering -->
+        <!-- ===================================================== -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-thymeleaf</artifactId>
+        </dependency>
 
-		<dependency>
-			<groupId>io.github.wimdeblauwe</groupId>
-			<artifactId>htmx-spring-boot-thymeleaf</artifactId>
-			<version>5.0.0</version>
-		</dependency>
+        <dependency>
+            <groupId>io.github.wimdeblauwe</groupId>
+            <artifactId>htmx-spring-boot-thymeleaf</artifactId>
+            <version>5.0.0</version>
+        </dependency>
 
-		<dependency>
-			<groupId>org.thymeleaf.extras</groupId>
-			<artifactId>thymeleaf-extras-springsecurity6</artifactId>
-		</dependency>
+        <dependency>
+            <groupId>org.thymeleaf.extras</groupId>
+            <artifactId>thymeleaf-extras-springsecurity6</artifactId>
+        </dependency>
 
-		<dependency>
-			<groupId>org.webjars.npm</groupId>
-			<artifactId>hyperscript.org</artifactId>
-			<version>0.9.14</version>
-		</dependency>
+        <dependency>
+            <groupId>org.webjars.npm</groupId>
+            <artifactId>hyperscript.org</artifactId>
+            <version>0.9.14</version>
+        </dependency>
 
-		<dependency>
-			<groupId>org.webjars.npm</groupId>
-			<artifactId>htmx.org</artifactId>
-			<version>4.0.0-alpha6</version>
-		</dependency>
+        <dependency>
+            <groupId>org.webjars.npm</groupId>
+            <artifactId>htmx.org</artifactId>
+            <version>4.0.0-alpha6</version>
+        </dependency>
 
-		<!-- ===================================================== -->
-		<!-- Security -->
-		<!-- Authentication and authorization -->
-		<!-- ===================================================== -->
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-security</artifactId>
-		</dependency>
+        <!-- ===================================================== -->
+        <!-- Security -->
+        <!-- Authentication and authorization -->
+        <!-- ===================================================== -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-security</artifactId>
+        </dependency>
 
-		<!-- ===================================================== -->
-		<!-- Data Access -->
-		<!-- Database access and migrations -->
-		<!-- ===================================================== -->
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-jooq</artifactId>
-		</dependency>
+        <!-- ===================================================== -->
+        <!-- Data Access -->
+        <!-- Database access and migrations -->
+        <!-- ===================================================== -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-jooq</artifactId>
+        </dependency>
 
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-flyway</artifactId>
-		</dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-flyway</artifactId>
+        </dependency>
 
-		<dependency>
-			<groupId>org.flywaydb</groupId>
-			<artifactId>flyway-database-postgresql</artifactId>
-		</dependency>
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-database-postgresql</artifactId>
+        </dependency>
 
-		<!-- ===================================================== -->
-		<!-- Redis -->
-		<!-- Caching / distributed data -->
-		<!-- ===================================================== -->
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-data-redis</artifactId>
-		</dependency>
+        <!-- ===================================================== -->
+        <!-- Redis -->
+        <!-- Caching / distributed data -->
+        <!-- ===================================================== -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-redis</artifactId>
+        </dependency>
 
-		<!-- ===================================================== -->
-		<!-- Observability / Monitoring -->
-		<!-- Metrics and actuator endpoints -->
-		<!-- ===================================================== -->
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-actuator</artifactId>
-		</dependency>
+        <!-- ===================================================== -->
+        <!-- Observability / Monitoring -->
+        <!-- Metrics and actuator endpoints -->
+        <!-- ===================================================== -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
 
-		<!-- ===================================================== -->
-		<!-- Domain Driven Design (jMolecules) -->
-		<!-- DDD building blocks and events -->
-		<!-- ===================================================== -->
-		<dependency>
-			<groupId>org.jmolecules.integrations</groupId>
-			<artifactId>jmolecules-starter-ddd</artifactId>
-		</dependency>
+        <!-- ===================================================== -->
+        <!-- Domain Driven Design (jMolecules) -->
+        <!-- DDD building blocks and events -->
+        <!-- ===================================================== -->
+        <dependency>
+            <groupId>org.jmolecules.integrations</groupId>
+            <artifactId>jmolecules-starter-ddd</artifactId>
+        </dependency>
 
-		<dependency>
-			<groupId>org.jmolecules</groupId>
-			<artifactId>jmolecules-events</artifactId>
-		</dependency>
+        <dependency>
+            <groupId>org.jmolecules</groupId>
+            <artifactId>jmolecules-events</artifactId>
+        </dependency>
 
-		<!-- ===================================================== -->
-		<!-- Spring Modulith -->
-		<!-- Modular monolith architecture -->
-		<!-- ===================================================== -->
-		<dependency>
-			<groupId>org.springframework.modulith</groupId>
-			<artifactId>spring-modulith-starter-core</artifactId>
-		</dependency>
+        <!-- ===================================================== -->
+        <!-- Spring Modulith -->
+        <!-- Modular monolith architecture -->
+        <!-- ===================================================== -->
+        <dependency>
+            <groupId>org.springframework.modulith</groupId>
+            <artifactId>spring-modulith-starter-core</artifactId>
+        </dependency>
 
-		<dependency>
-			<groupId>org.springframework.modulith</groupId>
-			<artifactId>spring-modulith-starter-jdbc</artifactId>
-		</dependency>
+        <dependency>
+            <groupId>org.springframework.modulith</groupId>
+            <artifactId>spring-modulith-starter-jdbc</artifactId>
+        </dependency>
 
-		<!-- ===================================================== -->
-		<!-- Development Tools -->
-		<!-- Live reload and developer convenience -->
-		<!-- ===================================================== -->
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-devtools</artifactId>
-			<scope>runtime</scope>
-			<optional>true</optional>
-		</dependency>
+        <!-- ===================================================== -->
+        <!-- Development Tools -->
+        <!-- Live reload and developer convenience -->
+        <!-- ===================================================== -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-devtools</artifactId>
+            <scope>runtime</scope>
+            <optional>true</optional>
+        </dependency>
 
-		<!-- ===================================================== -->
-		<!-- Runtime Dependencies -->
-		<!-- ===================================================== -->
-		<dependency>
-			<groupId>org.postgresql</groupId>
-			<artifactId>postgresql</artifactId>
-			<scope>runtime</scope>
-		</dependency>
+        <!-- ===================================================== -->
+        <!-- Runtime Dependencies -->
+        <!-- ===================================================== -->
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <scope>runtime</scope>
+        </dependency>
 
-		<dependency>
-			<groupId>org.springframework.modulith</groupId>
-			<artifactId>spring-modulith-actuator</artifactId>
-			<scope>runtime</scope>
-		</dependency>
+        <dependency>
+            <groupId>org.springframework.modulith</groupId>
+            <artifactId>spring-modulith-actuator</artifactId>
+            <scope>runtime</scope>
+        </dependency>
 
-		<dependency>
-			<groupId>org.springframework.modulith</groupId>
-			<artifactId>spring-modulith-observability</artifactId>
-			<scope>runtime</scope>
-		</dependency>
+        <dependency>
+            <groupId>org.springframework.modulith</groupId>
+            <artifactId>spring-modulith-observability</artifactId>
+            <scope>runtime</scope>
+        </dependency>
 
-		<!-- ===================================================== -->
-		<!-- Testing -->
-		<!-- ===================================================== -->
+        <!-- ===================================================== -->
+        <!-- Testing -->
+        <!-- ===================================================== -->
 
-		<!-- Spring Boot test starters -->
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-actuator-test</artifactId>
-			<scope>test</scope>
-		</dependency>
+        <!-- Spring Boot test starters -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator-test</artifactId>
+            <scope>test</scope>
+        </dependency>
 
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-data-redis-test</artifactId>
-			<scope>test</scope>
-		</dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-redis-test</artifactId>
+            <scope>test</scope>
+        </dependency>
 
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-flyway-test</artifactId>
-			<scope>test</scope>
-		</dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-flyway-test</artifactId>
+            <scope>test</scope>
+        </dependency>
 
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-jooq-test</artifactId>
-			<scope>test</scope>
-		</dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-jooq-test</artifactId>
+            <scope>test</scope>
+        </dependency>
 
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-security-test</artifactId>
-			<scope>test</scope>
-		</dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-security-test</artifactId>
+            <scope>test</scope>
+        </dependency>
 
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-thymeleaf-test</artifactId>
-			<scope>test</scope>
-		</dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-thymeleaf-test</artifactId>
+            <scope>test</scope>
+        </dependency>
 
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-webmvc-test</artifactId>
-			<scope>test</scope>
-		</dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-webmvc-test</artifactId>
+            <scope>test</scope>
+        </dependency>
 
-		<!-- Testcontainers -->
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-testcontainers</artifactId>
-			<scope>test</scope>
-		</dependency>
+        <!-- Testcontainers -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-testcontainers</artifactId>
+            <scope>test</scope>
+        </dependency>
 
-		<dependency>
-			<groupId>org.springframework.modulith</groupId>
-			<artifactId>spring-modulith-starter-test</artifactId>
-			<scope>test</scope>
-		</dependency>
+        <dependency>
+            <groupId>org.springframework.modulith</groupId>
+            <artifactId>spring-modulith-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
 
-		<dependency>
-			<groupId>org.testcontainers</groupId>
-			<artifactId>testcontainers-junit-jupiter</artifactId>
-			<scope>test</scope>
-		</dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>testcontainers-junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
 
-		<dependency>
-			<groupId>org.testcontainers</groupId>
-			<artifactId>testcontainers-postgresql</artifactId>
-			<scope>test</scope>
-		</dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>testcontainers-postgresql</artifactId>
+            <scope>test</scope>
+        </dependency>
 
-	</dependencies>
+    </dependencies>
 
-	<!-- ========================================================= -->
-	<!-- Dependency Management -->
-	<!-- ========================================================= -->
-	<dependencyManagement>
-		<dependencies>
+    <!-- ========================================================= -->
+    <!-- Dependency Management -->
+    <!-- ========================================================= -->
+    <dependencyManagement>
+        <dependencies>
 
-			<!-- Spring Modulith BOM -->
-			<dependency>
-				<groupId>org.springframework.modulith</groupId>
-				<artifactId>spring-modulith-bom</artifactId>
-				<version>${spring-modulith.version}</version>
-				<type>pom</type>
-				<scope>import</scope>
-			</dependency>
+            <!-- Spring Modulith BOM -->
+            <dependency>
+                <groupId>org.springframework.modulith</groupId>
+                <artifactId>spring-modulith-bom</artifactId>
+                <version>${spring-modulith.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
 
-			<!-- jMolecules BOM -->
-			<dependency>
-				<groupId>org.jmolecules</groupId>
-				<artifactId>jmolecules-bom</artifactId>
-				<version>${jmolecules.version}</version>
-				<type>pom</type>
-				<scope>import</scope>
-			</dependency>
+            <!-- jMolecules BOM -->
+            <dependency>
+                <groupId>org.jmolecules</groupId>
+                <artifactId>jmolecules-bom</artifactId>
+                <version>${jmolecules.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
 
-		</dependencies>
-	</dependencyManagement>
+        </dependencies>
+    </dependencyManagement>
 
-	<!-- ========================================================= -->
-	<!-- Build -->
-	<!-- ========================================================= -->
-	<build>
-		<plugins>
+    <!-- ========================================================= -->
+    <!-- Build -->
+    <!-- ========================================================= -->
+    <build>
+        <plugins>
 
-			<!-- Spring Boot packaging -->
-			<plugin>
-				<groupId>org.springframework.boot</groupId>
-				<artifactId>spring-boot-maven-plugin</artifactId>
-			</plugin>
+            <!-- Spring Boot packaging -->
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
 
-			<plugin>
-				<groupId>org.testcontainers</groupId>
-				<artifactId>testcontainers-jooq-codegen-maven-plugin</artifactId>
-				<version>${testcontainers-jooq-codegen-maven-plugin.version}</version>
-				<dependencies>
-					<dependency>
-						<groupId>org.jooq</groupId>
-						<artifactId>jooq-codegen</artifactId>
-						<version>${jooq.version}</version>
-					</dependency>
+            <plugin>
+                <groupId>com.github.eirslett</groupId>
+                <artifactId>frontend-maven-plugin</artifactId>
+                <version>1.15.0</version>
 
-					<dependency>
-						<groupId>org.testcontainers</groupId>
-						<artifactId>testcontainers</artifactId>
-						<version>${testcontainers.version}</version>
-					</dependency>
+                <configuration>
+                    <workingDirectory>frontend</workingDirectory>
+                </configuration>
 
-					<dependency>
-						<groupId>org.testcontainers</groupId>
-						<artifactId>testcontainers-postgresql</artifactId>
-						<version>${testcontainers.version}</version>
-					</dependency>
-					<dependency>
-						<groupId>org.postgresql</groupId>
-						<artifactId>postgresql</artifactId>
-						<version>${postgresql.version}</version>
-					</dependency>
-				</dependencies>
-				<executions>
-					<execution>
-						<id>generate-inventory</id>
-						<goals>
-							<goal>generate</goal>
-						</goals>
-						<phase>generate-sources</phase>
-						<configuration>
-							<database>
-								<type>POSTGRES</type>
-							</database>
-							<flyway>
-								<table>flyway_schema_history_inventory</table>
-								<locations>
-									filesystem:src/main/resources/db/migration/inventory
-								</locations>
-							</flyway>
-							<jooq>
-								<generator>
-									<database>
-										<includes>.*</includes>
-										<inputSchema>inventory</inputSchema>
-									</database>
-									<target>
-										<packageName>simple.simple_webapp.inventory</packageName>
-										<directory>target/generated-sources/jooq</directory>
-									</target>
-								</generator>
-							</jooq>
-						</configuration>
-					</execution>
+                <executions>
 
-					<execution>
-						<id>generate-order</id>
-						<goals>
-							<goal>generate</goal>
-						</goals>
-						<phase>generate-sources</phase>
-						<configuration>
-							<database>
-								<type>POSTGRES</type>
-							</database>
-							<flyway>
-								<table>flyway_schema_history_order</table>
-								<locations>
-									filesystem:src/main/resources/db/migration/order
-								</locations>
-							</flyway>
-							<jooq>
-								<generator>
-									<database>
-										<includes>.*</includes>
-										<inputSchema>order</inputSchema>
-									</database>
-									<target>
-										<packageName>simple.simple_webapp.order</packageName>
-										<directory>target/generated-sources/jooq</directory>
-									</target>
-								</generator>
-							</jooq>
-						</configuration>
-					</execution>
+                    <execution>
+                        <id>install-node</id>
+                        <goals>
+                            <goal>install-node-and-npm</goal>
+                        </goals>
+                        <configuration>
+                            <nodeVersion>v20.11.0</nodeVersion>
+                        </configuration>
+                    </execution>
 
-				<execution>
-					<id>generate-user</id>
-					<goals>
-						<goal>generate</goal>
-					</goals>
-					<phase>generate-sources</phase>
-					<configuration>
-						<database>
-							<type>POSTGRES</type>
-						</database>
-						<flyway>
-							<table>flyway_schema_history_user</table>
-							<locations>
-								filesystem:src/main/resources/db/migration/user
-							</locations>
-						</flyway>
-						<jooq>
-							<generator>
-								<database>
-									<includes>.*</includes>
-									<inputSchema>user</inputSchema>
-								</database>
-								<target>
-									<packageName>simple.simple_webapp.user</packageName>
-									<directory>target/generated-sources/jooq</directory>
-								</target>
-							</generator>
-						</jooq>
-					</configuration>
-				</execution>
-				</executions>
-			</plugin>
+                    <execution>
+                        <id>npm install</id>
+                        <goals>
+                            <goal>npm</goal>
+                        </goals>
+                        <configuration>
+                            <arguments>install</arguments>
+                        </configuration>
+                    </execution>
 
-			<!-- Documentation generation (Asciidoctor + PlantUML) -->
-			<plugin>
-				<groupId>org.asciidoctor</groupId>
-				<artifactId>asciidoctor-maven-plugin</artifactId>
-				<version>3.2.0</version>
+                    <execution>
+                        <id>build-tailwind</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>npm</goal>
+                        </goals>
+                        <configuration>
+                            <arguments>run build:css</arguments>
+                        </configuration>
+                    </execution>
 
-				<dependencies>
-					<dependency>
-						<groupId>org.asciidoctor</groupId>
-						<artifactId>asciidoctorj-diagram</artifactId>
-						<version>3.2.0</version>
-					</dependency>
+                </executions>
+            </plugin>
 
-					<dependency>
-						<groupId>org.asciidoctor</groupId>
-						<artifactId>asciidoctorj-diagram-plantuml</artifactId>
-						<version>1.2025.3</version>
-					</dependency>
-				</dependencies>
+            <plugin>
+                <groupId>org.testcontainers</groupId>
+                <artifactId>testcontainers-jooq-codegen-maven-plugin</artifactId>
+                <version>${testcontainers-jooq-codegen-maven-plugin.version}</version>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.jooq</groupId>
+                        <artifactId>jooq-codegen</artifactId>
+                        <version>${jooq.version}</version>
+                    </dependency>
 
-				<executions>
-					<execution>
-						<id>html</id>
-						<phase>generate-resources</phase>
-						<goals>
-							<goal>process-asciidoc</goal>
-						</goals>
-					</execution>
-				</executions>
+                    <dependency>
+                        <groupId>org.testcontainers</groupId>
+                        <artifactId>testcontainers</artifactId>
+                        <version>${testcontainers.version}</version>
+                    </dependency>
 
-				<configuration>
-					<doctype>book</doctype>
-					<sourceDirectory>${project.build.directory}/spring-modulith-docs</sourceDirectory>
-					<outputDirectory>${project.build.directory}/docs</outputDirectory>
+                    <dependency>
+                        <groupId>org.testcontainers</groupId>
+                        <artifactId>testcontainers-postgresql</artifactId>
+                        <version>${testcontainers.version}</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>org.postgresql</groupId>
+                        <artifactId>postgresql</artifactId>
+                        <version>${postgresql.version}</version>
+                    </dependency>
+                </dependencies>
+                <executions>
+                    <execution>
+                        <id>generate-inventory</id>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                        <phase>generate-sources</phase>
+                        <configuration>
+                            <database>
+                                <type>POSTGRES</type>
+                            </database>
+                            <flyway>
+                                <table>flyway_schema_history_inventory</table>
+                                <locations>
+                                    filesystem:src/main/resources/db/migration/inventory
+                                </locations>
+                            </flyway>
+                            <jooq>
+                                <generator>
+                                    <database>
+                                        <includes>.*</includes>
+                                        <inputSchema>inventory</inputSchema>
+                                    </database>
+                                    <target>
+                                        <packageName>simple.simple_webapp.inventory</packageName>
+                                        <directory>target/generated-sources/jooq</directory>
+                                    </target>
+                                </generator>
+                            </jooq>
+                        </configuration>
+                    </execution>
 
-					<attributes>
-						<docinfo>shared</docinfo>
-						<icons>font</icons>
-						<sectids>false</sectids>
-						<imagesdir>images</imagesdir>
-						<toclevels>3</toclevels>
-					</attributes>
+                    <execution>
+                        <id>generate-order</id>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                        <phase>generate-sources</phase>
+                        <configuration>
+                            <database>
+                                <type>POSTGRES</type>
+                            </database>
+                            <flyway>
+                                <table>flyway_schema_history_order</table>
+                                <locations>
+                                    filesystem:src/main/resources/db/migration/order
+                                </locations>
+                            </flyway>
+                            <jooq>
+                                <generator>
+                                    <database>
+                                        <includes>.*</includes>
+                                        <inputSchema>order</inputSchema>
+                                    </database>
+                                    <target>
+                                        <packageName>simple.simple_webapp.order</packageName>
+                                        <directory>target/generated-sources/jooq</directory>
+                                    </target>
+                                </generator>
+                            </jooq>
+                        </configuration>
+                    </execution>
 
-					<requires>
-						<require>asciidoctor-diagram</require>
-					</requires>
-				</configuration>
+                    <execution>
+                        <id>generate-user</id>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                        <phase>generate-sources</phase>
+                        <configuration>
+                            <database>
+                                <type>POSTGRES</type>
+                            </database>
+                            <flyway>
+                                <table>flyway_schema_history_user</table>
+                                <locations>
+                                    filesystem:src/main/resources/db/migration/user
+                                </locations>
+                            </flyway>
+                            <jooq>
+                                <generator>
+                                    <database>
+                                        <includes>.*</includes>
+                                        <inputSchema>user</inputSchema>
+                                    </database>
+                                    <target>
+                                        <packageName>simple.simple_webapp.user</packageName>
+                                        <directory>target/generated-sources/jooq</directory>
+                                    </target>
+                                </generator>
+                            </jooq>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
 
-			</plugin>
+            <!-- Documentation generation (Asciidoctor + PlantUML) -->
+            <plugin>
+                <groupId>org.asciidoctor</groupId>
+                <artifactId>asciidoctor-maven-plugin</artifactId>
+                <version>3.2.0</version>
 
-		</plugins>
-	</build>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.asciidoctor</groupId>
+                        <artifactId>asciidoctorj-diagram</artifactId>
+                        <version>3.2.0</version>
+                    </dependency>
+
+                    <dependency>
+                        <groupId>org.asciidoctor</groupId>
+                        <artifactId>asciidoctorj-diagram-plantuml</artifactId>
+                        <version>1.2025.3</version>
+                    </dependency>
+                </dependencies>
+
+                <executions>
+                    <execution>
+                        <id>html</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>process-asciidoc</goal>
+                        </goals>
+                    </execution>
+                </executions>
+
+                <configuration>
+                    <doctype>book</doctype>
+                    <sourceDirectory>${project.build.directory}/spring-modulith-docs</sourceDirectory>
+                    <outputDirectory>${project.build.directory}/docs</outputDirectory>
+
+                    <attributes>
+                        <docinfo>shared</docinfo>
+                        <icons>font</icons>
+                        <sectids>false</sectids>
+                        <imagesdir>images</imagesdir>
+                        <toclevels>3</toclevels>
+                    </attributes>
+
+                    <requires>
+                        <require>asciidoctor-diagram</require>
+                    </requires>
+                </configuration>
+
+            </plugin>
+
+        </plugins>
+    </build>
 
 </project>

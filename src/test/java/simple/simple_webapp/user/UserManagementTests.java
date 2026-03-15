@@ -105,7 +105,7 @@ class UserManagementTests {
         var username = uniqueUsername();
         userManagement.register(username, "password");
 
-        var user = userManagement.findAll().stream()
+        var user = userManagement.findAll(false).stream()
                 .filter(u -> u.username().equals(username))
                 .findFirst().orElseThrow();
 
@@ -126,7 +126,7 @@ class UserManagementTests {
         var username = uniqueUsername();
         userManagement.register(username, "password");
 
-        var user = userManagement.findAll().stream()
+        var user = userManagement.findAll(false).stream()
                 .filter(u -> u.username().equals(username))
                 .findFirst().orElseThrow();
 
@@ -137,11 +137,58 @@ class UserManagementTests {
     }
 
     @Test
+    void deleteUserSoftDeletesSetsDeletedAt() {
+        var username = uniqueUsername();
+        userManagement.register(username, "password");
+
+        var user = userManagement.findAll(false).stream()
+                .filter(u -> u.username().equals(username))
+                .findFirst().orElseThrow();
+
+        userManagement.deleteUser(user.id(), "other-user");
+
+        var record = dsl.selectFrom(USERS).where(USERS.USERNAME.eq(username)).fetchOne();
+        assertThat(record).isNotNull();
+        assertThat(record.getDeletedAt()).isNotNull();
+    }
+
+    @Test
+    void findAllExcludesSoftDeletedUsers() {
+        var username = uniqueUsername();
+        userManagement.register(username, "password");
+
+        var user = userManagement.findAll(false).stream()
+                .filter(u -> u.username().equals(username))
+                .findFirst().orElseThrow();
+
+        userManagement.deleteUser(user.id(), "other-user");
+
+        var found = userManagement.findAll(false).stream()
+                .anyMatch(u -> u.username().equals(username));
+        assertThat(found).isFalse();
+    }
+
+    @Test
+    void loadUserByUsernameThrowsForSoftDeletedUser() {
+        var username = uniqueUsername();
+        userManagement.register(username, "password");
+
+        var user = userManagement.findAll(false).stream()
+                .filter(u -> u.username().equals(username))
+                .findFirst().orElseThrow();
+
+        userManagement.deleteUser(user.id(), "other-user");
+
+        assertThatThrownBy(() -> userManagement.loadUserByUsername(username))
+                .isInstanceOf(org.springframework.security.core.userdetails.UsernameNotFoundException.class);
+    }
+
+    @Test
     void deleteUserBlockedOnSelf() {
         var username = uniqueUsername();
         userManagement.register(username, "password");
 
-        var user = userManagement.findAll().stream()
+        var user = userManagement.findAll(false).stream()
                 .filter(u -> u.username().equals(username))
                 .findFirst().orElseThrow();
 
@@ -178,7 +225,7 @@ class UserManagementTests {
     void resetPasswordReturnsNewPlainTextPassword() {
         var username = uniqueUsername();
         userManagement.register(username, "original");
-        var user = userManagement.findAll().stream()
+        var user = userManagement.findAll(false).stream()
                 .filter(u -> u.username().equals(username)).findFirst().orElseThrow();
 
         var temp = userManagement.resetPassword(user.id());

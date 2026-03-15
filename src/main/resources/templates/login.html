@@ -5,32 +5,38 @@
 <head>
     <title>Login</title>
 </head>
-<body>
-    <h1>Login</h1>
+<body class="min-h-screen flex items-center justify-center bg-base-200">
+    <div class="card w-full max-w-sm bg-base-100 shadow-xl">
+        <div class="card-body">
+            <h1 class="card-title text-2xl justify-center">Login</h1>
 
-    <div th:if="${param.error}">
-        <p>Invalid username or password.</p>
-    </div>
-    <div th:if="${param.logout}">
-        <p>You have been logged out.</p>
-    </div>
-    <div th:if="${param.registered}">
-        <p>Registration successful. Please log in.</p>
-    </div>
+            <div th:if="${param.error}" class="alert alert-error">
+                <span>Invalid username or password.</span>
+            </div>
+            <div th:if="${param.logout}" class="alert alert-success">
+                <span>You have been logged out.</span>
+            </div>
+            <div th:if="${param.registered}" class="alert alert-success">
+                <span>Registration successful. Please log in.</span>
+            </div>
 
-    <form th:action="@{/login}" method="post">
-        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
-        <div>
-            <label for="username">Username</label>
-            <input id="username" type="text" name="username" autocomplete="username" required autofocus/>
+            <form th:action="@{/login}" method="post" class="flex flex-col gap-4">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                <div class="flex flex-col gap-1">
+                    <label class="label" for="username"><span class="label-text">Username</span></label>
+                    <input id="username" type="text" name="username" autocomplete="username" required autofocus
+                           class="input input-bordered w-full"/>
+                </div>
+                <div class="flex flex-col gap-1">
+                    <label class="label" for="password"><span class="label-text">Password</span></label>
+                    <input id="password" type="password" name="password" autocomplete="current-password" required
+                           class="input input-bordered w-full"/>
+                </div>
+                <button type="submit" class="btn btn-primary w-full">Sign in</button>
+            </form>
+
+            <p class="text-center text-sm">Don't have an account? <a th:href="@{/register}" class="link link-primary">Register</a></p>
         </div>
-        <div>
-            <label for="password">Password</label>
-            <input id="password" type="password" name="password" autocomplete="current-password" required/>
-        </div>
-        <button type="submit">Sign in</button>
-    </form>
-
-    <p>Don't have an account? <a th:href="@{/register}">Register</a></p>
+    </div>
 </body>
 </html>

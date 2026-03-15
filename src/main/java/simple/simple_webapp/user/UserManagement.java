@@ -57,6 +57,7 @@ public class UserManagement implements UserDetailsService {
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         var user = dsl.selectFrom(USERS)
                 .where(USERS.USERNAME.eq(username))
+                .and(USERS.DELETED_AT.isNull())
                 .fetchOne();
 
         if (user == null) {
@@ -140,14 +141,20 @@ public class UserManagement implements UserDetailsService {
                 user.getUsername(),
                 roles,
                 Boolean.TRUE.equals(user.getAccountNonLocked()),
-                Boolean.TRUE.equals(user.getEnabled())
+                Boolean.TRUE.equals(user.getEnabled()),
+                user.getDeletedAt() != null
         );
     }
 
-    public List<UserSummary> findAll() {
-        var grouped = dsl.select(USERS.ID, USERS.USERNAME, USERS.ACCOUNT_NON_LOCKED, USERS.ENABLED, USER_ROLES.ROLE)
+    public List<UserSummary> findAll(boolean includeDeleted) {
+        var condition = includeDeleted
+                ? org.jooq.impl.DSL.noCondition()
+                : USERS.DELETED_AT.isNull();
+
+        var grouped = dsl.select(USERS.ID, USERS.USERNAME, USERS.ACCOUNT_NON_LOCKED, USERS.ENABLED, USERS.DELETED_AT, USER_ROLES.ROLE)
                 .from(USERS)
                 .leftJoin(USER_ROLES).on(USER_ROLES.USER_ID.eq(USERS.ID))
+                .where(condition)
                 .orderBy(USERS.USERNAME)
                 .fetchGroups(USERS.ID);
 
@@ -163,7 +170,8 @@ public class UserManagement implements UserDetailsService {
                             first.get(USERS.USERNAME),
                             roles,
                             Boolean.TRUE.equals(first.get(USERS.ACCOUNT_NON_LOCKED)),
-                            Boolean.TRUE.equals(first.get(USERS.ENABLED))
+                            Boolean.TRUE.equals(first.get(USERS.ENABLED)),
+                            first.get(USERS.DELETED_AT) != null
                     );
                 })
                 .toList();
@@ -234,7 +242,8 @@ public class UserManagement implements UserDetailsService {
         if (user != null && user.getUsername().equals(currentUsername)) {
             throw new IllegalArgumentException("Cannot delete own account");
         }
-        dsl.deleteFrom(USERS)
+        dsl.update(USERS)
+                .set(USERS.DELETED_AT, OffsetDateTime.now())
                 .where(USERS.ID.eq(id))
                 .execute();
     }

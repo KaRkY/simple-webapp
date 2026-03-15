@@ -29,14 +29,15 @@ class AdminController {
     }
 
     @GetMapping("/users")
-    String users(Model model) {
-        model.addAttribute("users", userManagement.findAll());
+    String users(@RequestParam(defaultValue = "false") boolean showDeleted, Model model) {
+        model.addAttribute("users", userManagement.findAll(showDeleted));
+        model.addAttribute("showDeleted", showDeleted);
         return "admin/users";
     }
 
     @GetMapping("/users/list")
     String userList(Model model) {
-        model.addAttribute("users", userManagement.findAll());
+        model.addAttribute("users", userManagement.findAll(false));
         return "admin/user-row :: userRows";
     }
 

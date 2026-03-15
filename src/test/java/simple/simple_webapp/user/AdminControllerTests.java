@@ -46,7 +46,7 @@ class AdminControllerTests {
     @Test
     @WithMockUser(roles = "ADMIN")
     void listUsersAsAdminReturns200() throws Exception {
-        when(userManagement.findAll()).thenReturn(List.of());
+        when(userManagement.findAll(false)).thenReturn(List.of());
 
         mockMvc.perform(get("/admin/users"))
                 .andExpect(status().isOk());
@@ -64,7 +64,7 @@ class AdminControllerTests {
     void lockUserWithHxRequestReturnsPartialRow() throws Exception {
         var id = UUID.randomUUID();
         when(userManagement.findById(id))
-                .thenReturn(new UserSummary(id, "bob", List.of("USER"), false, true));
+                .thenReturn(new UserSummary(id, "bob", List.of("USER"), false, true, false));
 
         mockMvc.perform(post("/admin/users/{id}/lock", id).with(csrf())
                         .header("HX-Request", "true"))
@@ -107,7 +107,7 @@ class AdminControllerTests {
         var id = UUID.randomUUID();
         when(userManagement.resetPassword(id)).thenReturn("temp-pass-123");
         when(userManagement.findById(id))
-                .thenReturn(new UserSummary(id, "bob", List.of("USER"), true, true));
+                .thenReturn(new UserSummary(id, "bob", List.of("USER"), true, true, false));
 
         mockMvc.perform(post("/admin/users/{id}/reset-password", id).with(csrf())
                         .header("HX-Request", "true"))
@@ -143,5 +143,14 @@ class AdminControllerTests {
         mockMvc.perform(post("/admin/users/{id}/delete", id).with(csrf()))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/admin/users"));
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void listUsersWithShowDeletedReturns200() throws Exception {
+        when(userManagement.findAll(true)).thenReturn(List.of());
+
+        mockMvc.perform(get("/admin/users").param("showDeleted", "true"))
+                .andExpect(status().isOk());
     }
 }

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:hx="http://www.w3.org/1999/xhtml">
 <body>
 
 <!--/* Multiple rows fragment — returned by GET /admin/users/list */-->
@@ -11,59 +11,70 @@
 
 <!--/* Single row fragment — returned by lock/unlock/role actions */-->
 <tr th:fragment="userRow(user)"
-    th:id="'user-row-' + ${user.id()}">
+    th:id="'user-row-' + ${user.id()}"
+    th:classappend="${user.deleted()} ? 'opacity-50' : ''">
     <td th:text="${user.username()}"></td>
     <td th:text="${#strings.listJoin(user.roles(), ', ')}"></td>
     <td>
-        <span th:if="${user.accountNonLocked()}">Active</span>
-        <span th:unless="${user.accountNonLocked()}">Locked</span>
+        <span th:if="${user.deleted()}" class="badge badge-ghost">Deleted</span>
+        <span th:unless="${user.deleted()}">
+            <span th:if="${user.accountNonLocked()}" class="badge badge-success">Active</span>
+            <span th:unless="${user.accountNonLocked()}" class="badge badge-error">Locked</span>
+        </span>
     </td>
     <td>
+        <div th:unless="${user.deleted()}" class="flex flex-wrap gap-1 items-center">
         <!--/* Lock / Unlock toggle */-->
         <form th:if="${user.accountNonLocked()}"
               method="post" th:action="@{/admin/users/{id}/lock(id=${user.id()})}"
+              hx:post="@{/admin/users/{id}/lock(id=${user.id()})}"
               hx-target="closest tr" hx-swap="outerHTML">
             <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
-            <button type="submit">Lock</button>
+            <button type="submit" class="btn btn-warning btn-xs">Lock</button>
         </form>
         <form th:unless="${user.accountNonLocked()}"
               method="post" th:action="@{/admin/users/{id}/unlock(id=${user.id()})}"
+              hx:post="@{/admin/users/{id}/unlock(id=${user.id()})}"
               hx-target="closest tr" hx-swap="outerHTML">
             <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
-            <button type="submit">Unlock</button>
+            <button type="submit" class="btn btn-success btn-xs">Unlock</button>
         </form>
 
         <!--/* Role selector */-->
         <form method="post" th:action="@{/admin/users/{id}/role(id=${user.id()})}"
-              hx-target="closest tr" hx-swap="outerHTML">
+              hx:post="@{/admin/users/{id}/role(id=${user.id()})}"
+              hx-target="closest tr" hx-swap="outerHTML" class="flex gap-1 items-center">
             <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
-            <select name="role">
+            <select name="role" class="select select-xs select-bordered">
                 <option value="USER"  th:selected="${user.roles().contains('USER')}">User</option>
                 <option value="ADMIN" th:selected="${user.roles().contains('ADMIN')}">Admin</option>
             </select>
-            <button type="submit">Set role</button>
+            <button type="submit" class="btn btn-secondary btn-xs">Set role</button>
         </form>
 
         <!--/* Delete */-->
         <form method="post" th:action="@{/admin/users/{id}/delete(id=${user.id()})}"
+              hx:post="@{/admin/users/{id}/delete(id=${user.id()})}"
               hx-target="closest tr" hx-swap="outerHTML"
               hx-confirm="Delete this user?">
             <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
-            <button type="submit">Delete</button>
+            <button type="submit" class="btn btn-error btn-xs">Delete</button>
         </form>
 
         <!--/* Reset password */-->
         <form method="post" th:action="@{/admin/users/{id}/reset-password(id=${user.id()})}"
+              hx:post="@{/admin/users/{id}/reset-password(id=${user.id()})}"
               hx-target="closest tr" hx-swap="outerHTML"
               hx-confirm="Reset this user's password?">
             <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
-            <button type="submit">Reset password</button>
+            <button type="submit" class="btn btn-info btn-xs">Reset password</button>
         </form>
 
         <!--/* One-time temp password display */-->
-        <span th:if="${tempPassword}" style="font-family:monospace;color:red">
-            Temp password: <span th:text="${tempPassword}"></span> (copy now)
+        <span th:if="${tempPassword}" class="badge badge-warning badge-outline font-mono">
+            Temp: <span th:text="${tempPassword}"></span>
         </span>
+        </div>
     </td>
 </tr>
 
