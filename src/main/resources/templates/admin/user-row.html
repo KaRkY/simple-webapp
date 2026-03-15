@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<!--/* Multiple rows fragment — returned by GET /admin/users/list */-->
+<th:block th:fragment="userRows">
+    <th:block th:each="user : ${users}">
+        <tr th:replace="~{admin/user-row :: userRow(user=${user})}"></tr>
+    </th:block>
+</th:block>
+
+<!--/* Single row fragment — returned by lock/unlock/role actions */-->
+<tr th:fragment="userRow(user)"
+    th:id="'user-row-' + ${user.id()}">
+    <td th:text="${user.username()}"></td>
+    <td th:text="${#strings.listJoin(user.roles(), ', ')}"></td>
+    <td>
+        <span th:if="${user.accountNonLocked()}">Active</span>
+        <span th:unless="${user.accountNonLocked()}">Locked</span>
+    </td>
+    <td>
+        <!--/* Lock / Unlock toggle */-->
+        <form th:if="${user.accountNonLocked()}"
+              method="post" th:action="@{/admin/users/{id}/lock(id=${user.id()})}"
+              hx-target="closest tr" hx-swap="outerHTML">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+            <button type="submit">Lock</button>
+        </form>
+        <form th:unless="${user.accountNonLocked()}"
+              method="post" th:action="@{/admin/users/{id}/unlock(id=${user.id()})}"
+              hx-target="closest tr" hx-swap="outerHTML">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+            <button type="submit">Unlock</button>
+        </form>
+
+        <!--/* Role selector */-->
+        <form method="post" th:action="@{/admin/users/{id}/role(id=${user.id()})}"
+              hx-target="closest tr" hx-swap="outerHTML">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+            <select name="role">
+                <option value="USER"  th:selected="${user.roles().contains('USER')}">User</option>
+                <option value="ADMIN" th:selected="${user.roles().contains('ADMIN')}">Admin</option>
+            </select>
+            <button type="submit">Set role</button>
+        </form>
+
+        <!--/* Delete */-->
+        <form method="post" th:action="@{/admin/users/{id}/delete(id=${user.id()})}"
+              hx-target="closest tr" hx-swap="outerHTML"
+              hx-confirm="Delete this user?">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+            <button type="submit">Delete</button>
+        </form>
+
+        <!--/* Reset password */-->
+        <form method="post" th:action="@{/admin/users/{id}/reset-password(id=${user.id()})}"
+              hx-target="closest tr" hx-swap="outerHTML"
+              hx-confirm="Reset this user's password?">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+            <button type="submit">Reset password</button>
+        </form>
+
+        <!--/* One-time temp password display */-->
+        <span th:if="${tempPassword}" style="font-family:monospace;color:red">
+            Temp password: <span th:text="${tempPassword}"></span> (copy now)
+        </span>
+    </td>
+</tr>
+
+</body>
+</html>

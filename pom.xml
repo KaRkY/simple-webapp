@@ -68,6 +68,18 @@
 			<artifactId>thymeleaf-extras-springsecurity6</artifactId>
 		</dependency>
 
+		<dependency>
+			<groupId>org.webjars.npm</groupId>
+			<artifactId>hyperscript.org</artifactId>
+			<version>0.9.14</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.webjars.npm</groupId>
+			<artifactId>htmx.org</artifactId>
+			<version>4.0.0-alpha6</version>
+		</dependency>
+
 		<!-- ===================================================== -->
 		<!-- Security -->
 		<!-- Authentication and authorization -->
@@ -377,6 +389,37 @@
 							</jooq>
 						</configuration>
 					</execution>
+
+				<execution>
+					<id>generate-user</id>
+					<goals>
+						<goal>generate</goal>
+					</goals>
+					<phase>generate-sources</phase>
+					<configuration>
+						<database>
+							<type>POSTGRES</type>
+						</database>
+						<flyway>
+							<table>flyway_schema_history_user</table>
+							<locations>
+								filesystem:src/main/resources/db/migration/user
+							</locations>
+						</flyway>
+						<jooq>
+							<generator>
+								<database>
+									<includes>.*</includes>
+									<inputSchema>user</inputSchema>
+								</database>
+								<target>
+									<packageName>simple.simple_webapp.user</packageName>
+									<directory>target/generated-sources/jooq</directory>
+								</target>
+							</generator>
+						</jooq>
+					</configuration>
+				</execution>
 				</executions>
 			</plugin>
 

@@ -10,6 +10,10 @@ spring:
     runtime:
       flyway-enabled: true
 
+logging:
+  level:
+    org.jooq.Constants: WARN
+
 
 management:
   endpoints:

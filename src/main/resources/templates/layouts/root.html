@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      th:fragment="layout(title, extraHead, content)">
+<head th:fragment="head(title, extraHead)">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title th:replace="${title}">Page</title>
+  <script th:src="@{/webjars/htmx.org/4.0.0-alpha6/dist/htmx.min.js}" defer></script>
+  <script th:src="@{/webjars/hyperscript.org/0.9.14/dist/_hyperscript.min.js}" defer></script>
+  <script th:inline="javascript">
+    document.addEventListener('htmx:configRequest', (evt) => {
+      evt.detail.headers['X-CSRF-TOKEN'] = /*[[${_csrf.token}]]*/ '';
+    });
+  </script>
+  <th:block th:replace="${extraHead}"></th:block>
+</head>
+<body th:replace="${content}">Content</body>
+</html>

@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      th:replace="~{layouts/admin :: layout(~{::title}, ~{::main})}">
+<head>
+    <title>User Management</title>
+</head>
+<body>
+<main>
+    <h1>User Management</h1>
+
+    <p sec:authentication="name">Logged in as: </p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Username</th>
+                <th>Roles</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="user-table-body">
+            <th:block th:insert="~{admin/user-row :: userRows}"></th:block>
+        </tbody>
+    </table>
+</main>
+</body>
+</html>

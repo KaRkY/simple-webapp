@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:fragment="layout(title, content)">
+<head th:replace="~{layouts/root :: head(${title}, ~{::userExtraHead})}">
+  <th:block th:fragment="userExtraHead"><!-- extra scripts for user layout --></th:block>
+</head>
+<body>
+  <nav>
+    <a th:href="@{/}">Home</a> |
+    <a th:href="@{/account/change-password}">Change Password</a> |
+    <form th:action="@{/logout}" method="post" style="display:inline">
+      <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+      <button type="submit">Sign out</button>
+    </form>
+  </nav>
+  <main th:replace="${content}">Content</main>
+</body>
+</html>
