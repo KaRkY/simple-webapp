@@ -1,0 +1,20 @@
+spring:
+  application:
+    name: simple-webapp
+  modulith:
+    events:
+      completion-mode: archive
+      jdbc:
+        schema-initialization:
+          enabled: false
+    runtime:
+      flyway-enabled: true
+
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include:
+          - health
+          - modulith
