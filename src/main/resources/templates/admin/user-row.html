@@ -13,13 +13,14 @@
 <tr th:fragment="userRow(user)"
     th:id="'user-row-' + ${user.id()}"
     th:classappend="${user.deleted()} ? 'opacity-50' : ''">
-    <td th:text="${user.username()}"></td>
+    <td th:text="${user.email()}"></td>
     <td th:text="${#strings.listJoin(user.roles(), ', ')}"></td>
     <td>
         <span th:if="${user.deleted()}" class="badge badge-ghost">Deleted</span>
         <span th:unless="${user.deleted()}">
-            <span th:if="${user.accountNonLocked()}" class="badge badge-success">Active</span>
-            <span th:unless="${user.accountNonLocked()}" class="badge badge-error">Locked</span>
+            <span th:if="${user.pendingActivation()}" class="badge badge-warning">Pending activation</span>
+            <span th:if="${!user.pendingActivation() and user.accountNonLocked()}" class="badge badge-success">Active</span>
+            <span th:if="${!user.pendingActivation() and !user.accountNonLocked()}" class="badge badge-error">Locked</span>
         </span>
     </td>
     <td>

@@ -24,7 +24,7 @@ class DefaultUserInitializerTests {
 
     @Test
     void userExistsAfterStartup() {
-        var details = userManagement.loadUserByUsername("test");
+        var details = userManagement.loadUserByUsername("test@example.com");
         assertThat(details.getAuthorities())
                 .extracting(Object::toString)
                 .contains("ROLE_USER");
@@ -37,7 +37,7 @@ class DefaultUserInitializerTests {
 
         var userCount = dsl.fetchCount(
                 dsl.selectOne().from(USERS)
-                        .where(USERS.USERNAME.eq("test"))
+                        .where(USERS.EMAIL.eq("test@example.com"))
         );
         assertThat(userCount).isEqualTo(1);
     }

@@ -29,13 +29,23 @@ class UserController {
     }
 
     @PostMapping("/register")
-    String register(@RequestParam String username, @RequestParam String password, Model model) {
+    String register(@RequestParam String email, @RequestParam String password, Model model) {
         try {
-            userManagement.register(username, password);
-            return "redirect:/login?registered";
-        } catch (DuplicateUsernameException e) {
-            model.addAttribute("error", "Username already taken");
+            userManagement.register(email, password);
+            return "redirect:/login?check-email";
+        } catch (DuplicateEmailException e) {
+            model.addAttribute("error", "Email already registered");
             return "register";
+        }
+    }
+
+    @GetMapping("/activate")
+    String activate(@RequestParam String token) {
+        try {
+            userManagement.activateUser(token);
+            return "redirect:/login?activated";
+        } catch (IllegalArgumentException e) {
+            return "redirect:/login?activation-failed";
         }
     }
 

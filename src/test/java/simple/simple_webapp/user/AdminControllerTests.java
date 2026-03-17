@@ -64,7 +64,7 @@ class AdminControllerTests {
     void lockUserWithHxRequestReturnsPartialRow() throws Exception {
         var id = UUID.randomUUID();
         when(userManagement.findById(id))
-                .thenReturn(new UserSummary(id, "bob", List.of("USER"), false, true, false));
+                .thenReturn(new UserSummary(id, "bob@example.com", List.of("USER"), false, true, false, true));
 
         mockMvc.perform(post("/admin/users/{id}/lock", id).with(csrf())
                         .header("HX-Request", "true"))
@@ -107,7 +107,7 @@ class AdminControllerTests {
         var id = UUID.randomUUID();
         when(userManagement.resetPassword(id)).thenReturn("temp-pass-123");
         when(userManagement.findById(id))
-                .thenReturn(new UserSummary(id, "bob", List.of("USER"), true, true, false));
+                .thenReturn(new UserSummary(id, "bob@example.com", List.of("USER"), true, true, false, true));
 
         mockMvc.perform(post("/admin/users/{id}/reset-password", id).with(csrf())
                         .header("HX-Request", "true"))

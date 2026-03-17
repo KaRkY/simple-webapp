@@ -25,219 +25,252 @@ class UserManagementTests {
 
     @Test
     void registerHappyPath() {
-        var username = uniqueUsername();
-        userManagement.register(username, "password");
+        var email = uniqueEmail();
+        userManagement.registerAndActivate(email, "password");
 
-        var details = userManagement.loadUserByUsername(username);
-        assertThat(details.getUsername()).isEqualTo(username);
+        var details = userManagement.loadUserByUsername(email);
+        assertThat(details.getUsername()).isEqualTo(email);
         assertThat(details.isEnabled()).isTrue();
         assertThat(details.isAccountNonLocked()).isTrue();
         assertThat(details.getAuthorities()).extracting(Object::toString).containsExactly("ROLE_USER");
     }
 
     @Test
-    void registerDuplicateUsernameThrows() {
-        var username = uniqueUsername();
-        userManagement.register(username, "password");
+    void registerDuplicateEmailThrows() {
+        var email = uniqueEmail();
+        userManagement.registerAndActivate(email, "password");
 
-        assertThatThrownBy(() -> userManagement.register(username, "other"))
-                .isInstanceOf(DuplicateUsernameException.class);
+        assertThatThrownBy(() -> userManagement.registerAndActivate(email, "other"))
+                .isInstanceOf(DuplicateEmailException.class);
     }
 
     @Test
     void threeFailedAttemptsLocksAccount() {
-        var username = uniqueUsername();
-        userManagement.register(username, "password");
+        var email = uniqueEmail();
+        userManagement.registerAndActivate(email, "password");
 
-        userManagement.recordFailedAttempt(username);
-        userManagement.recordFailedAttempt(username);
-        userManagement.recordFailedAttempt(username);
+        userManagement.recordFailedAttempt(email);
+        userManagement.recordFailedAttempt(email);
+        userManagement.recordFailedAttempt(email);
 
-        var details = userManagement.loadUserByUsername(username);
+        var details = userManagement.loadUserByUsername(email);
         assertThat(details.isAccountNonLocked()).isFalse();
     }
 
     @Test
     void twoFailedAttemptsDoNotLock() {
-        var username = uniqueUsername();
-        userManagement.register(username, "password");
+        var email = uniqueEmail();
+        userManagement.registerAndActivate(email, "password");
 
-        userManagement.recordFailedAttempt(username);
-        userManagement.recordFailedAttempt(username);
+        userManagement.recordFailedAttempt(email);
+        userManagement.recordFailedAttempt(email);
 
-        var details = userManagement.loadUserByUsername(username);
+        var details = userManagement.loadUserByUsername(email);
         assertThat(details.isAccountNonLocked()).isTrue();
     }
 
     @Test
     void successfulLoginResetsFailedAttempts() {
-        var username = uniqueUsername();
-        userManagement.register(username, "password");
+        var email = uniqueEmail();
+        userManagement.registerAndActivate(email, "password");
 
-        userManagement.recordFailedAttempt(username);
-        userManagement.recordFailedAttempt(username);
-        userManagement.recordSuccessfulLogin(username);
-        userManagement.recordFailedAttempt(username);
-        userManagement.recordFailedAttempt(username);
+        userManagement.recordFailedAttempt(email);
+        userManagement.recordFailedAttempt(email);
+        userManagement.recordSuccessfulLogin(email);
+        userManagement.recordFailedAttempt(email);
+        userManagement.recordFailedAttempt(email);
 
-        var details = userManagement.loadUserByUsername(username);
+        var details = userManagement.loadUserByUsername(email);
         assertThat(details.isAccountNonLocked()).isTrue();
     }
 
     @Test
     void autoUnlocksAfterFiveMinutes() {
-        var username = uniqueUsername();
-        userManagement.register(username, "password");
+        var email = uniqueEmail();
+        userManagement.registerAndActivate(email, "password");
 
-        // Simulate an expired lock by setting locked_at to 6 minutes ago directly in DB
         dsl.update(USERS)
                 .set(USERS.ACCOUNT_NON_LOCKED, false)
                 .set(USERS.LOCKED_AT, OffsetDateTime.now().minusMinutes(6))
-                .where(USERS.USERNAME.eq(username))
+                .where(USERS.EMAIL.eq(email))
                 .execute();
 
-        var details = userManagement.loadUserByUsername(username);
+        var details = userManagement.loadUserByUsername(email);
         assertThat(details.isAccountNonLocked()).isTrue();
     }
 
     @Test
     void manualLockAndUnlock() {
-        var username = uniqueUsername();
-        userManagement.register(username, "password");
+        var email = uniqueEmail();
+        userManagement.registerAndActivate(email, "password");
 
         var user = userManagement.findAll(false).stream()
-                .filter(u -> u.username().equals(username))
+                .filter(u -> u.email().equals(email))
                 .findFirst().orElseThrow();
 
         userManagement.lockUser(user.id());
-        assertThat(userManagement.loadUserByUsername(username).isAccountNonLocked()).isFalse();
+        assertThat(userManagement.loadUserByUsername(email).isAccountNonLocked()).isFalse();
 
         userManagement.unlockUser(user.id());
-        assertThat(userManagement.loadUserByUsername(username).isAccountNonLocked()).isTrue();
+        assertThat(userManagement.loadUserByUsername(email).isAccountNonLocked()).isTrue();
 
-        // unlockUser resets failed_login_attempts
-        var record = dsl.selectFrom(USERS).where(USERS.USERNAME.eq(username)).fetchOne();
+        var record = dsl.selectFrom(USERS).where(USERS.EMAIL.eq(email)).fetchOne();
         assertThat(record).isNotNull();
         assertThat(record.getFailedLoginAttempts()).isZero();
     }
 
     @Test
     void setRoleReplacesExistingRoles() {
-        var username = uniqueUsername();
-        userManagement.register(username, "password");
+        var email = uniqueEmail();
+        userManagement.registerAndActivate(email, "password");
 
         var user = userManagement.findAll(false).stream()
-                .filter(u -> u.username().equals(username))
+                .filter(u -> u.email().equals(email))
                 .findFirst().orElseThrow();
 
         userManagement.setRole(user.id(), UserRole.ADMIN);
 
-        var details = userManagement.loadUserByUsername(username);
+        var details = userManagement.loadUserByUsername(email);
         assertThat(details.getAuthorities()).extracting(Object::toString).containsExactly("ROLE_ADMIN");
     }
 
     @Test
     void deleteUserSoftDeletesSetsDeletedAt() {
-        var username = uniqueUsername();
-        userManagement.register(username, "password");
+        var email = uniqueEmail();
+        userManagement.registerAndActivate(email, "password");
 
         var user = userManagement.findAll(false).stream()
-                .filter(u -> u.username().equals(username))
+                .filter(u -> u.email().equals(email))
                 .findFirst().orElseThrow();
 
-        userManagement.deleteUser(user.id(), "other-user");
+        userManagement.deleteUser(user.id(), "other@example.com");
 
-        var record = dsl.selectFrom(USERS).where(USERS.USERNAME.eq(username)).fetchOne();
+        var record = dsl.selectFrom(USERS).where(USERS.EMAIL.eq(email)).fetchOne();
         assertThat(record).isNotNull();
         assertThat(record.getDeletedAt()).isNotNull();
     }
 
     @Test
     void findAllExcludesSoftDeletedUsers() {
-        var username = uniqueUsername();
-        userManagement.register(username, "password");
+        var email = uniqueEmail();
+        userManagement.registerAndActivate(email, "password");
 
         var user = userManagement.findAll(false).stream()
-                .filter(u -> u.username().equals(username))
+                .filter(u -> u.email().equals(email))
                 .findFirst().orElseThrow();
 
-        userManagement.deleteUser(user.id(), "other-user");
+        userManagement.deleteUser(user.id(), "other@example.com");
 
         var found = userManagement.findAll(false).stream()
-                .anyMatch(u -> u.username().equals(username));
+                .anyMatch(u -> u.email().equals(email));
         assertThat(found).isFalse();
     }
 
     @Test
-    void loadUserByUsernameThrowsForSoftDeletedUser() {
-        var username = uniqueUsername();
-        userManagement.register(username, "password");
+    void loadUserByEmailThrowsForSoftDeletedUser() {
+        var email = uniqueEmail();
+        userManagement.registerAndActivate(email, "password");
 
         var user = userManagement.findAll(false).stream()
-                .filter(u -> u.username().equals(username))
+                .filter(u -> u.email().equals(email))
                 .findFirst().orElseThrow();
 
-        userManagement.deleteUser(user.id(), "other-user");
+        userManagement.deleteUser(user.id(), "other@example.com");
 
-        assertThatThrownBy(() -> userManagement.loadUserByUsername(username))
+        assertThatThrownBy(() -> userManagement.loadUserByUsername(email))
                 .isInstanceOf(org.springframework.security.core.userdetails.UsernameNotFoundException.class);
     }
 
     @Test
     void deleteUserBlockedOnSelf() {
-        var username = uniqueUsername();
-        userManagement.register(username, "password");
+        var email = uniqueEmail();
+        userManagement.registerAndActivate(email, "password");
 
         var user = userManagement.findAll(false).stream()
-                .filter(u -> u.username().equals(username))
+                .filter(u -> u.email().equals(email))
                 .findFirst().orElseThrow();
 
-        assertThatThrownBy(() -> userManagement.deleteUser(user.id(), username))
+        assertThatThrownBy(() -> userManagement.deleteUser(user.id(), email))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     void changePasswordHappyPath() {
-        var username = uniqueUsername();
-        userManagement.register(username, "oldPass");
+        var email = uniqueEmail();
+        userManagement.registerAndActivate(email, "oldPass");
 
-        userManagement.changePassword(username, "oldPass", "newPass");
+        userManagement.changePassword(email, "oldPass", "newPass");
 
-        userManagement.loadUserByUsername(username);
-        // verify new password works (loadUserByUsername returns encoded — check via encoder indirectly)
-        var record = dsl.selectFrom(USERS).where(USERS.USERNAME.eq(username)).fetchOne();
+        var record = dsl.selectFrom(USERS).where(USERS.EMAIL.eq(email)).fetchOne();
         assertThat(record).isNotNull();
-        // old password must no longer match
-        var raw = record.getPassword();
-        assertThat(raw).doesNotContain("oldPass");
+        assertThat(record.getPassword()).doesNotContain("oldPass");
     }
 
     @Test
     void changePasswordWrongCurrentThrows() {
-        var username = uniqueUsername();
-        userManagement.register(username, "correct");
+        var email = uniqueEmail();
+        userManagement.registerAndActivate(email, "correct");
 
-        assertThatThrownBy(() -> userManagement.changePassword(username, "wrong", "new"))
+        assertThatThrownBy(() -> userManagement.changePassword(email, "wrong", "new"))
                 .isInstanceOf(org.springframework.security.authentication.BadCredentialsException.class);
     }
 
     @Test
     void resetPasswordReturnsNewPlainTextPassword() {
-        var username = uniqueUsername();
-        userManagement.register(username, "original");
+        var email = uniqueEmail();
+        userManagement.registerAndActivate(email, "original");
         var user = userManagement.findAll(false).stream()
-                .filter(u -> u.username().equals(username)).findFirst().orElseThrow();
+                .filter(u -> u.email().equals(email)).findFirst().orElseThrow();
 
         var temp = userManagement.resetPassword(user.id());
 
         assertThat(temp).isNotBlank();
-        // new hash in DB must differ from original
-        var record = dsl.selectFrom(USERS).where(USERS.USERNAME.eq(username)).fetchOne();
+        var record = dsl.selectFrom(USERS).where(USERS.EMAIL.eq(email)).fetchOne();
         assertThat(record).isNotNull();
         assertThat(record.getPassword()).doesNotContain("original");
     }
 
-    private static String uniqueUsername() {
-        return "user-" + UUID.randomUUID();
+    @Test
+    void activateUserHappyPath() {
+        var email = uniqueEmail();
+        userManagement.register(email, "password");
+
+        var tokenRecord = dsl.selectFrom(USERS).where(USERS.EMAIL.eq(email)).fetchOne();
+        assertThat(tokenRecord).isNotNull();
+        var token = tokenRecord.getActivationToken();
+        assertThat(token).isNotNull();
+
+        assertThat(userManagement.loadUserByUsername(email).isEnabled()).isFalse();
+
+        userManagement.activateUser(token);
+
+        assertThat(userManagement.loadUserByUsername(email).isEnabled()).isTrue();
+    }
+
+    @Test
+    void activateUserExpiredTokenThrows() {
+        var email = uniqueEmail();
+        userManagement.register(email, "password");
+
+        dsl.update(USERS)
+                .set(USERS.ACTIVATION_TOKEN_EXPIRES_AT, OffsetDateTime.now().minusHours(1))
+                .where(USERS.EMAIL.eq(email))
+                .execute();
+
+        var token = dsl.select(USERS.ACTIVATION_TOKEN).from(USERS)
+                .where(USERS.EMAIL.eq(email)).fetchOneInto(String.class);
+
+        assertThatThrownBy(() -> userManagement.activateUser(token))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void activateUserInvalidTokenThrows() {
+        assertThatThrownBy(() -> userManagement.activateUser("no-such-token"))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    private static String uniqueEmail() {
+        return "user-" + UUID.randomUUID() + "@example.com";
     }
 }

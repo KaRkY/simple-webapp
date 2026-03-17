@@ -11,20 +11,29 @@
             <h1 class="card-title text-2xl justify-center">Login</h1>
 
             <div th:if="${param.error}" class="alert alert-error">
-                <span>Invalid username or password.</span>
+                <span>Invalid email or password.</span>
+            </div>
+            <div th:if="${param['not-activated']}" class="alert alert-warning">
+                <span>Please activate your account. Check your inbox.</span>
             </div>
             <div th:if="${param.logout}" class="alert alert-success">
                 <span>You have been logged out.</span>
             </div>
-            <div th:if="${param.registered}" class="alert alert-success">
-                <span>Registration successful. Please log in.</span>
+            <div th:if="${param['check-email']}" class="alert alert-success">
+                <span>Registration successful. Check your email to activate your account.</span>
+            </div>
+            <div th:if="${param.activated}" class="alert alert-success">
+                <span>Account activated! You can now sign in.</span>
+            </div>
+            <div th:if="${param['activation-failed']}" class="alert alert-error">
+                <span>Activation link is invalid or has expired.</span>
             </div>
 
             <form th:action="@{/login}" method="post" class="flex flex-col gap-4">
                 <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
                 <div class="flex flex-col gap-1">
-                    <label class="label" for="username"><span class="label-text">Username</span></label>
-                    <input id="username" type="text" name="username" autocomplete="username" required autofocus
+                    <label class="label" for="email"><span class="label-text">Email</span></label>
+                    <input id="email" type="email" name="email" autocomplete="email" required autofocus
                            class="input input-bordered w-full"/>
                 </div>
                 <div class="flex flex-col gap-1">

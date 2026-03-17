@@ -17,7 +17,8 @@ import static simple.simple_webapp.user.Tables.USERS;
 class DefaultAdminInitializer implements ApplicationRunner {
 
     private static final Logger log = LoggerFactory.getLogger(DefaultAdminInitializer.class);
-    private static final String ADMIN_USERNAME = "admin";
+    static final String ADMIN_EMAIL = "admin@example.com";
+    static final String ADMIN_PASSWORD = "admin";
 
     private final DSLContext dsl;
     private final UserManagement userManagement;
@@ -31,28 +32,23 @@ class DefaultAdminInitializer implements ApplicationRunner {
     @Transactional
     public void run(ApplicationArguments args) {
         boolean adminExists = dsl.fetchExists(
-                dsl.selectOne().from(USER_ROLES)
-                        .where(USER_ROLES.ROLE.eq(UserRole.ADMIN.name()))
-        );
+                dsl.selectOne().from(USERS)
+                        .where(USERS.EMAIL.eq(ADMIN_EMAIL)));
         if (adminExists) {
             return;
         }
 
-        var password = UUID.randomUUID().toString();
-
         try {
-            userManagement.register(ADMIN_USERNAME, password);
-        } catch (DuplicateUsernameException ignored) {
-            // "admin" username exists but has no ADMIN role — skip initialization
+            userManagement.registerAndActivate(ADMIN_EMAIL, ADMIN_PASSWORD);
+        } catch (DuplicateEmailException ignored) {
             return;
         }
 
         var user = dsl.selectFrom(USERS)
-                .where(USERS.USERNAME.eq(ADMIN_USERNAME))
+                .where(USERS.EMAIL.eq(ADMIN_EMAIL))
                 .fetchOne();
 
         if (user == null) {
-            // register() was mocked or failed — skip
             return;
         }
 
@@ -62,10 +58,10 @@ class DefaultAdminInitializer implements ApplicationRunner {
                 
                 ===========================================
                 Default admin user created.
-                  Username : {}
+                  Email    : {}
                   Password : {}
                 Change this password immediately!
                 ===========================================""",
-                ADMIN_USERNAME, password);
+                ADMIN_EMAIL, ADMIN_PASSWORD);
     }
 }

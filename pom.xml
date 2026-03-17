@@ -90,6 +90,15 @@
         </dependency>
 
         <!-- ===================================================== -->
+        <!-- Mail -->
+        <!-- Activation email sending -->
+        <!-- ===================================================== -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-mail</artifactId>
+        </dependency>
+
+        <!-- ===================================================== -->
         <!-- Data Access -->
         <!-- Database access and migrations -->
         <!-- ===================================================== -->

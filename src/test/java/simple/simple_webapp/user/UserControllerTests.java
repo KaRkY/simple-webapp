@@ -57,25 +57,42 @@ class UserControllerTests {
     @Test
     void registerRedirectsToLoginOnSuccess() throws Exception {
         mockMvc.perform(post("/register")
-                        .param("username", "alice")
+                        .param("email", "alice@example.com")
                         .param("password", "secret")
                         .with(csrf()))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/login?registered"));
+                .andExpect(redirectedUrl("/login?check-email"));
     }
 
     @Test
-    void registerShowsErrorOnDuplicateUsername() throws Exception {
-        doThrow(new DuplicateUsernameException("alice"))
-                .when(userManagement).register("alice", "secret");
+    void registerShowsErrorOnDuplicateEmail() throws Exception {
+        doThrow(new DuplicateEmailException("alice@example.com"))
+                .when(userManagement).register("alice@example.com", "secret");
 
         mockMvc.perform(post("/register")
-                        .param("username", "alice")
+                        .param("email", "alice@example.com")
                         .param("password", "secret")
                         .with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(view().name("register"))
                 .andExpect(model().attributeExists("error"));
+    }
+
+    @Test
+    void activateWithValidTokenRedirects() throws Exception {
+        mockMvc.perform(get("/activate").param("token", "valid-token"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/login?activated"));
+    }
+
+    @Test
+    void activateWithInvalidTokenRedirects() throws Exception {
+        doThrow(new IllegalArgumentException("Invalid or expired token"))
+                .when(userManagement).activateUser("bad-token");
+
+        mockMvc.perform(get("/activate").param("token", "bad-token"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/login?activation-failed"));
     }
 
     @Test

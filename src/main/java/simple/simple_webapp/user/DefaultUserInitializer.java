@@ -14,7 +14,7 @@ import static simple.simple_webapp.user.Tables.USERS;
 class DefaultUserInitializer implements ApplicationRunner {
 
     private static final Logger log = LoggerFactory.getLogger(DefaultUserInitializer.class);
-    private static final String USER_USERNAME = "test";
+    private static final String USER_EMAIL = "test@example.com";
     private static final String USER_PASSWORD = "test";
 
     private final DSLContext dsl;
@@ -30,15 +30,15 @@ class DefaultUserInitializer implements ApplicationRunner {
     public void run(ApplicationArguments args) {
         boolean userExists = dsl.fetchExists(
                 dsl.selectOne().from(USERS)
-                        .where(USERS.USERNAME.eq(USER_USERNAME))
+                        .where(USERS.EMAIL.eq(USER_EMAIL))
         );
         if (userExists) {
             return;
         }
 
         try {
-            userManagement.register(USER_USERNAME, USER_PASSWORD);
-        } catch (DuplicateUsernameException ignored) {
+            userManagement.registerAndActivate(USER_EMAIL, USER_PASSWORD);
+        } catch (DuplicateEmailException ignored) {
             return;
         }
 
@@ -46,9 +46,9 @@ class DefaultUserInitializer implements ApplicationRunner {
                 
                 ===========================================
                 Default test user created.
-                  Username : {}
+                  Email    : {}
                   Password : {}
                 ===========================================""",
-                USER_USERNAME, USER_PASSWORD);
+                USER_EMAIL, USER_PASSWORD);
     }
 }

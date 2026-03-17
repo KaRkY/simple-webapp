@@ -9,10 +9,9 @@ import org.springframework.context.annotation.Import;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import simple.simple_webapp.TestcontainersConfiguration;
 
-import java.util.Arrays;
-
 import static org.assertj.core.api.Assertions.assertThat;
-import static simple.simple_webapp.user.Tables.USER_ROLES;
+import static simple.simple_webapp.user.DefaultAdminInitializer.ADMIN_EMAIL;
+import static simple.simple_webapp.user.Tables.USERS;
 
 @SpringBootTest
 @Testcontainers(disabledWithoutDocker = true)
@@ -25,7 +24,7 @@ class DefaultAdminInitializerTests {
 
     @Test
     void adminUserExistsAfterStartup() {
-        var details = userManagement.loadUserByUsername("admin");
+        var details = userManagement.loadUserByUsername("admin@example.com");
         assertThat(details.getAuthorities())
                 .extracting(Object::toString)
                 .contains("ROLE_ADMIN");
@@ -37,8 +36,8 @@ class DefaultAdminInitializerTests {
         initializer.run(new DefaultApplicationArguments());
 
         var adminCount = dsl.fetchCount(
-                dsl.selectOne().from(USER_ROLES)
-                        .where(USER_ROLES.ROLE.eq(UserRole.ADMIN.name()))
+                        dsl.selectOne().from(USERS)
+                                .where(USERS.EMAIL.eq(ADMIN_EMAIL))
         );
         assertThat(adminCount).isEqualTo(1);
     }
