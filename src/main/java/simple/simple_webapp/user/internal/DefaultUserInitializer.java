@@ -1,11 +1,13 @@
-package simple.simple_webapp.user;
+package simple.simple_webapp.user.internal;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
+import simple.simple_webapp.user.CreateUser;
+import simple.simple_webapp.user.DuplicateEmailException;
+import simple.simple_webapp.user.UserManagement;
 
 @Component
 class DefaultUserInitializer implements ApplicationRunner {
@@ -14,23 +16,16 @@ class DefaultUserInitializer implements ApplicationRunner {
     private static final String USER_EMAIL = "test@example.com";
     private static final String USER_PASSWORD = "test";
 
-    private final UserDao userDao;
     private final UserManagement userManagement;
 
-    DefaultUserInitializer(UserDao userDao, UserManagement userManagement) {
-        this.userDao = userDao;
+    DefaultUserInitializer(UserManagement userManagement) {
         this.userManagement = userManagement;
     }
 
     @Override
-    @Transactional
     public void run(ApplicationArguments args) {
-        if (userDao.existsByEmail(USER_EMAIL)) {
-            return;
-        }
-
         try {
-            userManagement.registerAndActivate(USER_EMAIL, USER_PASSWORD);
+            userManagement.registerAndActivate(new CreateUser(USER_EMAIL, USER_PASSWORD));
         } catch (DuplicateEmailException ignored) {
             return;
         }

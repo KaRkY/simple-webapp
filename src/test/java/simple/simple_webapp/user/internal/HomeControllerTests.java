@@ -1,4 +1,4 @@
-package simple.simple_webapp;
+package simple.simple_webapp.user.internal;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -11,6 +11,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 import org.testcontainers.junit.jupiter.Testcontainers;
+import simple.simple_webapp.TestcontainersConfiguration;
 import simple.simple_webapp.user.UserManagement;
 
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
@@ -25,7 +26,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class HomeControllerTests {
 
     @Autowired WebApplicationContext context;
-    @MockitoBean UserManagement userManagement;
+    @MockitoBean
+    UserManagement userManagement;
 
     MockMvc mockMvc;
 

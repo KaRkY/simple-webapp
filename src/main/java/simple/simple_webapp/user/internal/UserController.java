@@ -1,4 +1,4 @@
-package simple.simple_webapp.user;
+package simple.simple_webapp.user.internal;
 
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -8,6 +8,9 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import simple.simple_webapp.user.CreateUser;
+import simple.simple_webapp.user.DuplicateEmailException;
+import simple.simple_webapp.user.UserManagement;
 
 @Controller
 class UserController {
@@ -31,7 +34,7 @@ class UserController {
     @PostMapping("/register")
     String register(@RequestParam String email, @RequestParam String password, Model model) {
         try {
-            userManagement.register(email, password);
+            userManagement.register(new CreateUser(email, password));
             return "redirect:/login?check-email";
         } catch (DuplicateEmailException e) {
             model.addAttribute("error", "Email already registered");

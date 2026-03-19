@@ -1,8 +1,8 @@
 package simple.simple_webapp.user;
 
-class DuplicateEmailException extends RuntimeException {
+public class DuplicateEmailException extends Exception {
 
-    DuplicateEmailException(String email) {
+    public DuplicateEmailException(String email) {
         super("Email already registered: " + email);
     }
 }

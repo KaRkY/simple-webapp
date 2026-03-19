@@ -1,12 +1,17 @@
-package simple.simple_webapp.user;
+package simple.simple_webapp.user.internal;
 
 import org.jooq.DSLContext;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.modulith.test.ApplicationModuleTest;
+import org.springframework.modulith.test.Scenario;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import simple.simple_webapp.TestcontainersConfiguration;
+import simple.simple_webapp.user.CreateUser;
+import simple.simple_webapp.user.DuplicateEmailException;
+import simple.simple_webapp.user.UserActivatedEvent;
+import simple.simple_webapp.user.UserRegisteredEvent;
 
 import java.time.OffsetDateTime;
 import java.util.UUID;
@@ -15,18 +20,29 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static simple.simple_webapp.user.Tables.USERS;
 
-@SpringBootTest
+@ApplicationModuleTest(module = "user")
 @Testcontainers(disabledWithoutDocker = true)
 @Import(TestcontainersConfiguration.class)
 class UserManagementTests {
 
-    @Autowired UserManagement userManagement;
-    @Autowired DSLContext dsl;
+    @Autowired
+    UserManagementImpl userManagement;
+    @Autowired
+    DSLContext dsl;
 
     @Test
-    void registerHappyPath() {
+    void registerHappyPathWithRegisteredEvent(Scenario scenario) {
         var email = uniqueEmail();
-        userManagement.registerAndActivate(email, "password");
+        scenario
+                .stimulate(() -> {
+                    try {
+                        userManagement.registerAndActivate(new CreateUser(email, "password"));
+                    } catch (DuplicateEmailException e) {
+                        throw new RuntimeException(e);
+                    }
+                })
+                .andWaitForEventOfType(UserRegisteredEvent.class)
+                .toArrive();
 
         var details = userManagement.loadUserByUsername(email);
         assertThat(details.getUsername()).isEqualTo(email);
@@ -36,18 +52,39 @@ class UserManagementTests {
     }
 
     @Test
-    void registerDuplicateEmailThrows() {
+    void registerHappyPathWithActivatedEvent(Scenario scenario) {
         var email = uniqueEmail();
-        userManagement.registerAndActivate(email, "password");
+        scenario
+                .stimulate(() -> {
+                    try {
+                        userManagement.registerAndActivate(new CreateUser(email, "password"));
+                    } catch (DuplicateEmailException e) {
+                        throw new RuntimeException(e);
+                    }
+                })
+                .andWaitForEventOfType(UserActivatedEvent.class)
+                .toArrive();
 
-        assertThatThrownBy(() -> userManagement.registerAndActivate(email, "other"))
+        var details = userManagement.loadUserByUsername(email);
+        assertThat(details.getUsername()).isEqualTo(email);
+        assertThat(details.isEnabled()).isTrue();
+        assertThat(details.isAccountNonLocked()).isTrue();
+        assertThat(details.getAuthorities()).extracting(Object::toString).containsExactly("ROLE_USER");
+    }
+
+    @Test
+    void registerDuplicateEmailThrows() throws DuplicateEmailException {
+        var email = uniqueEmail();
+        userManagement.registerAndActivate(new CreateUser(email, "password"));
+
+        assertThatThrownBy(() -> userManagement.registerAndActivate(new CreateUser(email, "other")))
                 .isInstanceOf(DuplicateEmailException.class);
     }
 
     @Test
-    void threeFailedAttemptsLocksAccount() {
+    void threeFailedAttemptsLocksAccount() throws DuplicateEmailException {
         var email = uniqueEmail();
-        userManagement.registerAndActivate(email, "password");
+        userManagement.registerAndActivate(new CreateUser(email, "password"));
 
         userManagement.recordFailedAttempt(email);
         userManagement.recordFailedAttempt(email);
@@ -58,9 +95,9 @@ class UserManagementTests {
     }
 
     @Test
-    void twoFailedAttemptsDoNotLock() {
+    void twoFailedAttemptsDoNotLock() throws DuplicateEmailException {
         var email = uniqueEmail();
-        userManagement.registerAndActivate(email, "password");
+        userManagement.registerAndActivate(new CreateUser(email, "password"));
 
         userManagement.recordFailedAttempt(email);
         userManagement.recordFailedAttempt(email);
@@ -70,9 +107,9 @@ class UserManagementTests {
     }
 
     @Test
-    void successfulLoginResetsFailedAttempts() {
+    void successfulLoginResetsFailedAttempts() throws DuplicateEmailException {
         var email = uniqueEmail();
-        userManagement.registerAndActivate(email, "password");
+        userManagement.registerAndActivate(new CreateUser(email, "password"));
 
         userManagement.recordFailedAttempt(email);
         userManagement.recordFailedAttempt(email);
@@ -85,9 +122,9 @@ class UserManagementTests {
     }
 
     @Test
-    void autoUnlocksAfterFiveMinutes() {
+    void autoUnlocksAfterFiveMinutes() throws DuplicateEmailException {
         var email = uniqueEmail();
-        userManagement.registerAndActivate(email, "password");
+        userManagement.registerAndActivate(new CreateUser(email, "password"));
 
         dsl.update(USERS)
                 .set(USERS.ACCOUNT_NON_LOCKED, false)
@@ -100,9 +137,9 @@ class UserManagementTests {
     }
 
     @Test
-    void manualLockAndUnlock() {
+    void manualLockAndUnlock() throws DuplicateEmailException {
         var email = uniqueEmail();
-        userManagement.registerAndActivate(email, "password");
+        userManagement.registerAndActivate(new CreateUser(email, "password"));
 
         var user = userManagement.findAll(false).stream()
                 .filter(u -> u.email().equals(email))
@@ -120,9 +157,9 @@ class UserManagementTests {
     }
 
     @Test
-    void setRoleReplacesExistingRoles() {
+    void setRoleReplacesExistingRoles() throws DuplicateEmailException {
         var email = uniqueEmail();
-        userManagement.registerAndActivate(email, "password");
+        userManagement.registerAndActivate(new CreateUser(email, "password"));
 
         var user = userManagement.findAll(false).stream()
                 .filter(u -> u.email().equals(email))
@@ -135,9 +172,9 @@ class UserManagementTests {
     }
 
     @Test
-    void deleteUserSoftDeletesSetsDeletedAt() {
+    void deleteUserSoftDeletesSetsDeletedAt() throws DuplicateEmailException {
         var email = uniqueEmail();
-        userManagement.registerAndActivate(email, "password");
+        userManagement.registerAndActivate(new CreateUser(email, "password"));
 
         var user = userManagement.findAll(false).stream()
                 .filter(u -> u.email().equals(email))
@@ -151,9 +188,9 @@ class UserManagementTests {
     }
 
     @Test
-    void findAllExcludesSoftDeletedUsers() {
+    void findAllExcludesSoftDeletedUsers() throws DuplicateEmailException {
         var email = uniqueEmail();
-        userManagement.registerAndActivate(email, "password");
+        userManagement.registerAndActivate(new CreateUser(email, "password"));
 
         var user = userManagement.findAll(false).stream()
                 .filter(u -> u.email().equals(email))
@@ -167,9 +204,9 @@ class UserManagementTests {
     }
 
     @Test
-    void loadUserByEmailThrowsForSoftDeletedUser() {
+    void loadUserByEmailThrowsForSoftDeletedUser() throws DuplicateEmailException {
         var email = uniqueEmail();
-        userManagement.registerAndActivate(email, "password");
+        userManagement.registerAndActivate(new CreateUser(email, "password"));
 
         var user = userManagement.findAll(false).stream()
                 .filter(u -> u.email().equals(email))
@@ -182,9 +219,9 @@ class UserManagementTests {
     }
 
     @Test
-    void deleteUserBlockedOnSelf() {
+    void deleteUserBlockedOnSelf() throws DuplicateEmailException {
         var email = uniqueEmail();
-        userManagement.registerAndActivate(email, "password");
+        userManagement.registerAndActivate(new CreateUser(email, "password"));
 
         var user = userManagement.findAll(false).stream()
                 .filter(u -> u.email().equals(email))
@@ -195,9 +232,9 @@ class UserManagementTests {
     }
 
     @Test
-    void changePasswordHappyPath() {
+    void changePasswordHappyPath() throws DuplicateEmailException {
         var email = uniqueEmail();
-        userManagement.registerAndActivate(email, "oldPass");
+        userManagement.registerAndActivate(new CreateUser(email, "oldPass"));
 
         userManagement.changePassword(email, "oldPass", "newPass");
 
@@ -207,18 +244,18 @@ class UserManagementTests {
     }
 
     @Test
-    void changePasswordWrongCurrentThrows() {
+    void changePasswordWrongCurrentThrows() throws DuplicateEmailException {
         var email = uniqueEmail();
-        userManagement.registerAndActivate(email, "correct");
+        userManagement.registerAndActivate(new CreateUser(email, "correct"));
 
         assertThatThrownBy(() -> userManagement.changePassword(email, "wrong", "new"))
                 .isInstanceOf(org.springframework.security.authentication.BadCredentialsException.class);
     }
 
     @Test
-    void resetPasswordReturnsNewPlainTextPassword() {
+    void resetPasswordReturnsNewPlainTextPassword() throws DuplicateEmailException {
         var email = uniqueEmail();
-        userManagement.registerAndActivate(email, "original");
+        userManagement.registerAndActivate(new CreateUser(email, "original"));
         var user = userManagement.findAll(false).stream()
                 .filter(u -> u.email().equals(email)).findFirst().orElseThrow();
 
@@ -231,9 +268,9 @@ class UserManagementTests {
     }
 
     @Test
-    void activateUserHappyPath() {
+    void activateUserHappyPath() throws DuplicateEmailException {
         var email = uniqueEmail();
-        userManagement.register(email, "password");
+        userManagement.register(new CreateUser(email, "password"));
 
         var tokenRecord = dsl.selectFrom(USERS).where(USERS.EMAIL.eq(email)).fetchOne();
         assertThat(tokenRecord).isNotNull();
@@ -248,9 +285,9 @@ class UserManagementTests {
     }
 
     @Test
-    void activateUserExpiredTokenThrows() {
+    void activateUserExpiredTokenThrows() throws DuplicateEmailException {
         var email = uniqueEmail();
-        userManagement.register(email, "password");
+        userManagement.register(new CreateUser(email, "password"));
 
         dsl.update(USERS)
                 .set(USERS.ACTIVATION_TOKEN_EXPIRES_AT, OffsetDateTime.now().minusHours(1))

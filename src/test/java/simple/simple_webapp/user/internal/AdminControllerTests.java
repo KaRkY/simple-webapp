@@ -1,4 +1,4 @@
-package simple.simple_webapp.user;
+package simple.simple_webapp.user.internal;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -12,6 +12,8 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import simple.simple_webapp.TestcontainersConfiguration;
+import simple.simple_webapp.user.UserManagement;
+import simple.simple_webapp.user.UserSummary;
 
 import java.util.List;
 import java.util.UUID;
@@ -32,7 +34,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class AdminControllerTests {
 
     @Autowired WebApplicationContext context;
-    @MockitoBean UserManagement userManagement;
+    @MockitoBean
+    UserManagement userManagement;
 
     MockMvc mockMvc;
 

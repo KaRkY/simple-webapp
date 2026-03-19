@@ -1,4 +1,4 @@
-package simple.simple_webapp.user;
+package simple.simple_webapp.user.internal;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;

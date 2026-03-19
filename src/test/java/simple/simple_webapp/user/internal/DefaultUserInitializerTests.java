@@ -1,4 +1,4 @@
-package simple.simple_webapp.user;
+package simple.simple_webapp.user.internal;
 
 import org.jooq.DSLContext;
 import org.junit.jupiter.api.Test;
@@ -10,24 +10,25 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import simple.simple_webapp.TestcontainersConfiguration;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static simple.simple_webapp.user.DefaultAdminInitializer.ADMIN_EMAIL;
 import static simple.simple_webapp.user.Tables.USERS;
 
 @SpringBootTest
 @Testcontainers(disabledWithoutDocker = true)
 @Import(TestcontainersConfiguration.class)
-class DefaultAdminInitializerTests {
+class DefaultUserInitializerTests {
 
-    @Autowired UserManagement userManagement;
-    @Autowired DefaultAdminInitializer initializer;
+    @Autowired
+    UserManagementImpl userManagement;
+    @Autowired
+    DefaultUserInitializer initializer;
     @Autowired DSLContext dsl;
 
     @Test
-    void adminUserExistsAfterStartup() {
-        var details = userManagement.loadUserByUsername("admin@example.com");
+    void userExistsAfterStartup() {
+        var details = userManagement.loadUserByUsername("test@example.com");
         assertThat(details.getAuthorities())
                 .extracting(Object::toString)
-                .contains("ROLE_ADMIN");
+                .contains("ROLE_USER");
     }
 
     @Test
@@ -35,10 +36,10 @@ class DefaultAdminInitializerTests {
         initializer.run(new DefaultApplicationArguments());
         initializer.run(new DefaultApplicationArguments());
 
-        var adminCount = dsl.fetchCount(
-                        dsl.selectOne().from(USERS)
-                                .where(USERS.EMAIL.eq(ADMIN_EMAIL))
+        var userCount = dsl.fetchCount(
+                dsl.selectOne().from(USERS)
+                        .where(USERS.EMAIL.eq("test@example.com"))
         );
-        assertThat(adminCount).isEqualTo(1);
+        assertThat(userCount).isEqualTo(1);
     }
 }

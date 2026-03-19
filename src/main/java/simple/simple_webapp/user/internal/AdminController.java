@@ -1,4 +1,4 @@
-package simple.simple_webapp.user;
+package simple.simple_webapp.user.internal;
 
 import io.github.wimdeblauwe.htmx.spring.boot.mvc.HxRequest;
 import org.springframework.http.ResponseEntity;
@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+import simple.simple_webapp.user.UserManagement;
 
 import java.util.UUID;
 

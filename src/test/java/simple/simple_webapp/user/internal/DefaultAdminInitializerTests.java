@@ -1,4 +1,4 @@
-package simple.simple_webapp.user;
+package simple.simple_webapp.user.internal;
 
 import org.jooq.DSLContext;
 import org.junit.jupiter.api.Test;
@@ -10,24 +10,26 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import simple.simple_webapp.TestcontainersConfiguration;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static simple.simple_webapp.user.Tables.USER_ROLES;
 import static simple.simple_webapp.user.Tables.USERS;
+import static simple.simple_webapp.user.internal.DefaultAdminInitializer.ADMIN_EMAIL;
 
 @SpringBootTest
 @Testcontainers(disabledWithoutDocker = true)
 @Import(TestcontainersConfiguration.class)
-class DefaultUserInitializerTests {
+class DefaultAdminInitializerTests {
 
-    @Autowired UserManagement userManagement;
-    @Autowired DefaultUserInitializer initializer;
+    @Autowired
+    UserManagementImpl userManagement;
+    @Autowired
+    DefaultAdminInitializer initializer;
     @Autowired DSLContext dsl;
 
     @Test
-    void userExistsAfterStartup() {
-        var details = userManagement.loadUserByUsername("test@example.com");
+    void adminUserExistsAfterStartup() {
+        var details = userManagement.loadUserByUsername("admin@example.com");
         assertThat(details.getAuthorities())
                 .extracting(Object::toString)
-                .contains("ROLE_USER");
+                .contains("ROLE_ADMIN");
     }
 
     @Test
@@ -35,10 +37,10 @@ class DefaultUserInitializerTests {
         initializer.run(new DefaultApplicationArguments());
         initializer.run(new DefaultApplicationArguments());
 
-        var userCount = dsl.fetchCount(
-                dsl.selectOne().from(USERS)
-                        .where(USERS.EMAIL.eq("test@example.com"))
+        var adminCount = dsl.fetchCount(
+                        dsl.selectOne().from(USERS)
+                                .where(USERS.EMAIL.eq(ADMIN_EMAIL))
         );
-        assertThat(userCount).isEqualTo(1);
+        assertThat(adminCount).isEqualTo(1);
     }
 }

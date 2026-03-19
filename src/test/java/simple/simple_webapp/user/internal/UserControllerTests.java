@@ -1,7 +1,8 @@
-package simple.simple_webapp.user;
+package simple.simple_webapp.user.internal;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
@@ -12,6 +13,9 @@ import org.springframework.web.context.WebApplicationContext;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import simple.simple_webapp.TestcontainersConfiguration;
+import simple.simple_webapp.user.CreateUser;
+import simple.simple_webapp.user.DuplicateEmailException;
+import simple.simple_webapp.user.UserManagement;
 
 import static org.mockito.Mockito.doThrow;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -29,7 +33,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class UserControllerTests {
 
     @Autowired WebApplicationContext context;
-    @MockitoBean UserManagement userManagement;
+    @MockitoBean
+    UserManagement userManagement;
 
     MockMvc mockMvc;
 
@@ -66,8 +71,8 @@ class UserControllerTests {
 
     @Test
     void registerShowsErrorOnDuplicateEmail() throws Exception {
-        doThrow(new DuplicateEmailException("alice@example.com"))
-                .when(userManagement).register("alice@example.com", "secret");
+        Mockito.doThrow(new DuplicateEmailException("alice@example.com"))
+                .when(userManagement).register(new CreateUser("alice@example.com", "secret"));
 
         mockMvc.perform(post("/register")
                         .param("email", "alice@example.com")

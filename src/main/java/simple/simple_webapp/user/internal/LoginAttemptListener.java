@@ -1,9 +1,10 @@
-package simple.simple_webapp.user;
+package simple.simple_webapp.user.internal;
 
 import org.springframework.context.event.EventListener;
 import org.springframework.security.authentication.event.AuthenticationFailureBadCredentialsEvent;
 import org.springframework.security.authentication.event.AuthenticationSuccessEvent;
 import org.springframework.stereotype.Component;
+import simple.simple_webapp.user.UserManagement;
 
 @Component
 class LoginAttemptListener {
