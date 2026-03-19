@@ -1,4 +1,7 @@
 spring:
+  task:
+    scheduling:
+      enabled: false
   mail:
     host: localhost
     port: 1025

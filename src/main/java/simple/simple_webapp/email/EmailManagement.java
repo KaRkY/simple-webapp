@@ -4,7 +4,7 @@ import java.util.Map;
 
 public interface EmailManagement {
 
-    EmailTemplate loadEmailTemplate(String templateType);
+    EmailTemplate loadEmailTemplate(String name);
 
-    void addEmailTemplate(EmailTemplate template);
+    void queueEmail(String to, String templateName, Map<String, Object> variables);
 }

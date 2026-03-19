@@ -445,6 +445,37 @@
                     </execution>
 
                     <execution>
+                        <id>generate-email</id>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                        <phase>generate-sources</phase>
+                        <configuration>
+                            <database>
+                                <type>POSTGRES</type>
+                            </database>
+                            <flyway>
+                                <table>flyway_schema_history_email</table>
+                                <locations>
+                                    filesystem:src/main/resources/db/migration/email
+                                </locations>
+                            </flyway>
+                            <jooq>
+                                <generator>
+                                    <database>
+                                        <includes>.*</includes>
+                                        <inputSchema>email</inputSchema>
+                                    </database>
+                                    <target>
+                                        <packageName>simple.simple_webapp.email</packageName>
+                                        <directory>target/generated-sources/jooq</directory>
+                                    </target>
+                                </generator>
+                            </jooq>
+                        </configuration>
+                    </execution>
+
+                    <execution>
                         <id>generate-user</id>
                         <goals>
                             <goal>generate</goal>

@@ -24,7 +24,7 @@ public class UserManagementImpl implements UserDetailsService, UserManagement {
     private final PasswordEncoder passwordEncoder;
     private final ApplicationEventPublisher events;
 
-    public UserManagementImpl(UserDao userDao, PasswordEncoder passwordEncoder, ApplicationEventPublisher events) {
+    UserManagementImpl(UserDao userDao, PasswordEncoder passwordEncoder, ApplicationEventPublisher events) {
         this.userDao = userDao;
         this.passwordEncoder = passwordEncoder;
         this.events = events;
@@ -50,7 +50,7 @@ public class UserManagementImpl implements UserDetailsService, UserManagement {
             throw e;
         }
         userDao.insertRole(id, UserRole.USER.name());
-        events.publishEvent(new UserRegisteredEvent(id));
+        events.publishEvent(new UserRegisteredEvent(id, token));
     }
 
     @Transactional
@@ -71,7 +71,7 @@ public class UserManagementImpl implements UserDetailsService, UserManagement {
             throw e;
         }
         userDao.insertRole(id, UserRole.USER.name());
-        events.publishEvent(new UserRegisteredEvent(id));
+        events.publishEvent(new UserRegisteredEvent(id, null));
         events.publishEvent(new UserActivatedEvent(id));
     }
 
@@ -213,3 +213,6 @@ public class UserManagementImpl implements UserDetailsService, UserManagement {
         );
     }
 }
+
+
+
