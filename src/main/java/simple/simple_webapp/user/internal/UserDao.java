@@ -9,7 +9,6 @@ import org.springframework.stereotype.Repository;
 
 import java.time.OffsetDateTime;
 import java.util.List;
-import java.util.UUID;
 
 import static simple.simple_webapp.user.Tables.USER_ROLES;
 import static simple.simple_webapp.user.Tables.USERS;
@@ -23,18 +22,19 @@ class UserDao {
         this.dsl = dsl;
     }
 
-    public void insert(InsertUser insertUser) {
-        dsl.insertInto(USERS)
-                .set(USERS.ID, insertUser.id())
+    public Long insert(InsertUser insertUser) {
+        return dsl.insertInto(USERS)
                 .set(USERS.EMAIL, insertUser.email())
                 .set(USERS.PASSWORD, insertUser.encodedPassword())
                 .set(USERS.ENABLED, insertUser.enabled())
                 .set(USERS.ACTIVATION_TOKEN, insertUser.activationToken())
                 .set(USERS.ACTIVATION_TOKEN_EXPIRES_AT, insertUser.activationTokenExpiresAt())
-                .execute();
+                .returningResult(USERS.ID)
+                .fetchOne()
+                .value1();
     }
 
-    public void insertRole(UUID userId, String role) {
+    public void insertRole(Long userId, String role) {
         dsl.insertInto(USER_ROLES)
                 .set(USER_ROLES.USER_ID, userId)
                 .set(USER_ROLES.ROLE, role)
@@ -49,7 +49,7 @@ class UserDao {
                 .fetchOne(this::toUserRecord);
     }
 
-    public void activate(UUID id) {
+    public void activate(Long id) {
         dsl.update(USERS)
                 .set(USERS.ENABLED, true)
                 .setNull(USERS.ACTIVATION_TOKEN)
@@ -73,7 +73,7 @@ class UserDao {
                 .fetchOne(this::toUserRecord);
     }
 
-    public void autoUnlock(UUID id) {
+    public void autoUnlock(Long id) {
         dsl.update(USERS)
                 .set(USERS.ACCOUNT_NON_LOCKED, true)
                 .set(USERS.FAILED_LOGIN_ATTEMPTS, 0)
@@ -111,7 +111,7 @@ class UserDao {
                 .execute();
     }
 
-    public @Nullable UserRecord findById(UUID id) {
+    public @Nullable UserRecord findById(Long id) {
         return dsl.select(USERS.asterisk(), rolesField())
                 .from(USERS)
                 .where(USERS.ID.eq(id))
@@ -127,7 +127,7 @@ class UserDao {
                 .fetch(this::toUserRecord);
     }
 
-    public void lock(UUID id) {
+    public void lock(Long id) {
         dsl.update(USERS)
                 .set(USERS.ACCOUNT_NON_LOCKED, false)
                 .set(USERS.LOCKED_AT, OffsetDateTime.now())
@@ -135,7 +135,7 @@ class UserDao {
                 .execute();
     }
 
-    public void unlock(UUID id) {
+    public void unlock(Long id) {
         dsl.update(USERS)
                 .set(USERS.ACCOUNT_NON_LOCKED, true)
                 .set(USERS.LOCKED_AT, (OffsetDateTime) null)
@@ -144,7 +144,7 @@ class UserDao {
                 .execute();
     }
 
-    public void setRoles(UUID userId, String role) {
+    public void setRoles(Long userId, String role) {
         dsl.deleteFrom(USER_ROLES)
                 .where(USER_ROLES.USER_ID.eq(userId))
                 .execute();
@@ -154,14 +154,14 @@ class UserDao {
                 .execute();
     }
 
-    public void updatePassword(UUID id, String encodedPassword) {
+    public void updatePassword(Long id, String encodedPassword) {
         dsl.update(USERS)
                 .set(USERS.PASSWORD, encodedPassword)
                 .where(USERS.ID.eq(id))
                 .execute();
     }
 
-    public void softDelete(UUID id) {
+    public void softDelete(Long id) {
         dsl.update(USERS)
                 .set(USERS.DELETED_AT, OffsetDateTime.now())
                 .where(USERS.ID.eq(id))
@@ -169,7 +169,6 @@ class UserDao {
     }
 
     record InsertUser(
-            UUID id,
             String email,
             String encodedPassword,
             boolean enabled,

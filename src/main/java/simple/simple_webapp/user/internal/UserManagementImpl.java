@@ -35,13 +35,14 @@ public class UserManagementImpl implements UserDetailsService, UserManagement {
     public void register(CreateUser command) throws DuplicateEmailException {
         var email = command.email();
         var password = command.password();
-        var id = UUID.randomUUID();
         var token = UUID.randomUUID().toString();
         try {
             String encodedPassword = passwordEncoder.encode(password);
             OffsetDateTime activationTokenExpiresAt = OffsetDateTime.now().plusHours(24);
             assert encodedPassword != null;
-            userDao.insert(new UserDao.InsertUser(id, email, encodedPassword, false, token, activationTokenExpiresAt));
+            Long id = userDao.insert(new UserDao.InsertUser(email, encodedPassword, false, token, activationTokenExpiresAt));
+            userDao.insertRole(id, UserRole.USER.name());
+            events.publishEvent(new UserRegisteredEvent(id, token));
         } catch (DataIntegrityViolationException e) {
             var cause = e.getMostSpecificCause().getMessage();
             if (cause != null && cause.contains("users_email_unique")) {
@@ -49,8 +50,6 @@ public class UserManagementImpl implements UserDetailsService, UserManagement {
             }
             throw e;
         }
-        userDao.insertRole(id, UserRole.USER.name());
-        events.publishEvent(new UserRegisteredEvent(id, token));
     }
 
     @Transactional
@@ -58,11 +57,13 @@ public class UserManagementImpl implements UserDetailsService, UserManagement {
     public void registerAndActivate(CreateUser command) throws DuplicateEmailException {
         var email = command.email();
         var password = command.password();
-        var id = UUID.randomUUID();
         try {
             String encodedPassword = passwordEncoder.encode(password);
             assert encodedPassword != null;
-            userDao.insert(new UserDao.InsertUser(id, email, encodedPassword, true, null, null));
+            Long id = userDao.insert(new UserDao.InsertUser(email, encodedPassword, true, null, null));
+            userDao.insertRole(id, UserRole.USER.name());
+            events.publishEvent(new UserRegisteredEvent(id, null));
+            events.publishEvent(new UserActivatedEvent(id));
         } catch (DataIntegrityViolationException e) {
             var cause = e.getMostSpecificCause().getMessage();
             if (cause != null && cause.contains("users_email_unique")) {
@@ -70,9 +71,6 @@ public class UserManagementImpl implements UserDetailsService, UserManagement {
             }
             throw e;
         }
-        userDao.insertRole(id, UserRole.USER.name());
-        events.publishEvent(new UserRegisteredEvent(id, null));
-        events.publishEvent(new UserActivatedEvent(id));
     }
 
     @Transactional
@@ -137,7 +135,7 @@ public class UserManagementImpl implements UserDetailsService, UserManagement {
     }
 
     @Override
-    public UserSummary findById(UUID id) {
+    public UserSummary findById(Long id) {
         var user = userDao.findById(id);
         if (user == null) {
             throw new NoSuchElementException("User not found: " + id);
@@ -154,19 +152,19 @@ public class UserManagementImpl implements UserDetailsService, UserManagement {
 
     @Transactional
     @Override
-    public void lockUser(UUID id) {
+    public void lockUser(Long id) {
         userDao.lock(id);
     }
 
     @Transactional
     @Override
-    public void unlockUser(UUID id) {
+    public void unlockUser(Long id) {
         userDao.unlock(id);
     }
 
     @Transactional
     @Override
-    public void setRole(UUID id, UserRole role) {
+    public void setRole(Long id, UserRole role) {
         userDao.setRoles(id, role.name());
     }
 
@@ -185,7 +183,7 @@ public class UserManagementImpl implements UserDetailsService, UserManagement {
 
     @Transactional
     @Override
-    public String resetPassword(UUID id) {
+    public String resetPassword(Long id) {
         var password = UUID.randomUUID().toString();
         userDao.updatePassword(id, passwordEncoder.encode(password));
         return password;
@@ -193,7 +191,7 @@ public class UserManagementImpl implements UserDetailsService, UserManagement {
 
     @Transactional
     @Override
-    public void deleteUser(UUID id, String currentEmail) {
+    public void deleteUser(Long id, String currentEmail) {
         var user = userDao.findById(id);
         if (user != null && user.email().equals(currentEmail)) {
             throw new IllegalArgumentException("Cannot delete own account");

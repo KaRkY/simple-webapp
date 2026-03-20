@@ -285,10 +285,8 @@ class EmailManagementTests {
     }
 
     private String insertTemplate(EmailTemplateType type, String subject, String template) {
-        var id = UUID.randomUUID();
-        var name = "template-" + id;
+        var name = "template-" + System.nanoTime();
         dsl.insertInto(EMAIL_TEMPLATES)
-                .set(EMAIL_TEMPLATES.ID, id)
                 .set(EMAIL_TEMPLATES.NAME, name)
                 .set(EMAIL_TEMPLATES.SUBJECT, subject)
                 .set(EMAIL_TEMPLATES.TYPE, type.toDbValue())

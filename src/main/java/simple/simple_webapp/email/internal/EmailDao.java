@@ -10,7 +10,6 @@ import simple.simple_webapp.email.QueuedEmail;
 
 import java.time.OffsetDateTime;
 import java.util.List;
-import java.util.UUID;
 
 import static simple.simple_webapp.email.Tables.EMAILS;
 import static simple.simple_webapp.email.Tables.EMAILS_ARCHIVE;
@@ -35,7 +34,6 @@ public class EmailDao {
 
     void saveEmail(InsertEmail email) {
         dsl.insertInto(EMAILS)
-                .set(EMAILS.ID, email.id())
                 .set(EMAILS.FROM, email.from())
                 .set(EMAILS.TO, email.to())
                 .set(EMAILS.SUBJECT, email.subject())
@@ -75,7 +73,6 @@ public class EmailDao {
                     .where(EMAILS.ID.in(ids))
                     .execute();
         }
-
         return rows;
     }
 
@@ -100,7 +97,7 @@ public class EmailDao {
                 .fetch(this::toQueuedEmail);
     }
 
-    void failEmail(UUID id, int newAttemptCount, OffsetDateTime nextRetryAt) {
+    void failEmail(Long id, int newAttemptCount, OffsetDateTime nextRetryAt) {
         dsl.update(EMAILS)
                 .set(EMAILS.STATUS, "pending")
                 .set(EMAILS.ATTEMPT_COUNT, newAttemptCount)
@@ -168,11 +165,10 @@ public class EmailDao {
     }
 
     record InsertEmail(
-            UUID id,
             String from,
             String to,
             String subject,
             String content,
-            UUID templateId) {
+            Long templateId) {
     }
 }

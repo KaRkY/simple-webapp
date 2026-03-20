@@ -16,7 +16,6 @@ import simple.simple_webapp.user.UserManagement;
 import simple.simple_webapp.user.UserSummary;
 
 import java.util.List;
-import java.util.UUID;
 
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
@@ -65,7 +64,7 @@ class AdminControllerTests {
     @Test
     @WithMockUser(roles = "ADMIN")
     void lockUserWithHxRequestReturnsPartialRow() throws Exception {
-        var id = UUID.randomUUID();
+        var id = 1L;
         when(userManagement.findById(id))
                 .thenReturn(new UserSummary(id, "bob@example.com", List.of("USER"), false, true, false, true));
 
@@ -77,7 +76,7 @@ class AdminControllerTests {
     @Test
     @WithMockUser(roles = "ADMIN")
     void lockUserWithoutHxRequestRedirects() throws Exception {
-        var id = UUID.randomUUID();
+        var id = 1L;
 
         mockMvc.perform(post("/admin/users/{id}/lock", id).with(csrf()))
                 .andExpect(status().is3xxRedirection())
@@ -87,7 +86,7 @@ class AdminControllerTests {
     @Test
     @WithMockUser(roles = "ADMIN", username = "admin")
     void deleteOwnAccountReturnsForbidden() throws Exception {
-        var id = UUID.randomUUID();
+        var id = 1L;
         doThrow(new IllegalArgumentException("Cannot delete own account"))
                 .when(userManagement).deleteUser(id, "admin");
 
@@ -98,7 +97,7 @@ class AdminControllerTests {
     @Test
     @WithMockUser(roles = "ADMIN", username = "admin")
     void deleteOtherUserReturns200() throws Exception {
-        var id = UUID.randomUUID();
+        var id = 1L;
 
         mockMvc.perform(delete("/admin/users/{id}", id).with(csrf()))
                 .andExpect(status().isOk());
@@ -107,7 +106,7 @@ class AdminControllerTests {
     @Test
     @WithMockUser(roles = "ADMIN")
     void resetPasswordWithHxRequestReturnsPartialRow() throws Exception {
-        var id = UUID.randomUUID();
+        var id = 1L;
         when(userManagement.resetPassword(id)).thenReturn("temp-pass-123");
         when(userManagement.findById(id))
                 .thenReturn(new UserSummary(id, "bob@example.com", List.of("USER"), true, true, false, true));
@@ -120,7 +119,7 @@ class AdminControllerTests {
     @Test
     @WithMockUser(roles = "ADMIN")
     void resetPasswordWithoutHxRequestRedirects() throws Exception {
-        var id = UUID.randomUUID();
+        var id = 1L;
         when(userManagement.resetPassword(id)).thenReturn("temp-pass-123");
 
         mockMvc.perform(post("/admin/users/{id}/reset-password", id).with(csrf()))
@@ -131,7 +130,7 @@ class AdminControllerTests {
     @Test
     @WithMockUser(roles = "ADMIN", username = "admin")
     void deleteUserPostWithHxRequestReturns200() throws Exception {
-        var id = UUID.randomUUID();
+        var id = 1L;
 
         mockMvc.perform(post("/admin/users/{id}/delete", id).with(csrf())
                         .header("HX-Request", "true"))
@@ -141,7 +140,7 @@ class AdminControllerTests {
     @Test
     @WithMockUser(roles = "ADMIN", username = "admin")
     void deleteUserPostWithoutHxRequestRedirects() throws Exception {
-        var id = UUID.randomUUID();
+        var id = 1L;
 
         mockMvc.perform(post("/admin/users/{id}/delete", id).with(csrf()))
                 .andExpect(status().is3xxRedirection())

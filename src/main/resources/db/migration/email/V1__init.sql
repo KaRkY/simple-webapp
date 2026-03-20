@@ -1,8 +1,11 @@
 CREATE SCHEMA IF NOT EXISTS "email";
 
+CREATE SEQUENCE "email".email_templates_id_seq AS BIGINT START WITH 1 INCREMENT BY 1;
+CREATE SEQUENCE "email".emails_id_seq          AS BIGINT START WITH 1 INCREMENT BY 1;
+
 CREATE TABLE "email".email_templates
 (
-    id       UUID NOT NULL,
+    id       BIGINT NOT NULL DEFAULT nextval('"email".email_templates_id_seq'),
     name     TEXT NOT NULL,
     subject  TEXT NOT NULL,
     type     TEXT NOT NULL CHECK (type IN ('text', 'html')),
@@ -11,14 +14,16 @@ CREATE TABLE "email".email_templates
     CONSTRAINT email_templates_name_unique UNIQUE (name)
 );
 
+ALTER SEQUENCE "email".email_templates_id_seq OWNED BY "email".email_templates.id;
+
 CREATE TABLE "email".emails
 (
-    id                UUID                     NOT NULL,
+    id                BIGINT                   NOT NULL DEFAULT nextval('"email".emails_id_seq'),
     "from"            TEXT                     NOT NULL,
     "to"              TEXT                     NOT NULL,
     subject           TEXT                     NOT NULL,
     content           TEXT                     NOT NULL,
-    email_template_id UUID                     NOT NULL,
+    email_template_id BIGINT                   NOT NULL,
     created_at        TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
     status            TEXT                     NOT NULL DEFAULT 'pending'
         CONSTRAINT emails_status_check CHECK (status IN ('pending', 'processing')),
@@ -29,30 +34,32 @@ CREATE TABLE "email".emails
     CONSTRAINT emails_email_template_fk FOREIGN KEY (email_template_id) REFERENCES "email".email_templates (id) ON DELETE CASCADE
 );
 
+ALTER SEQUENCE "email".emails_id_seq OWNED BY "email".emails.id;
+
 CREATE INDEX emails_pending_idx ON "email".emails (created_at, id)
     WHERE status = 'pending';
 
 CREATE TABLE "email".emails_archive
 (
-    id                UUID                     NOT NULL,
+    id                BIGINT                   NOT NULL,
     "from"            TEXT                     NOT NULL,
     "to"              TEXT                     NOT NULL,
     subject           TEXT                     NOT NULL,
     content           TEXT                     NOT NULL,
     sent_at           TIMESTAMP WITH TIME ZONE NULL,
-    email_template_id UUID                     NOT NULL,
+    email_template_id BIGINT                   NOT NULL,
     PRIMARY KEY (id),
     CONSTRAINT emails_archive_email_template_fk FOREIGN KEY (email_template_id) REFERENCES "email".email_templates (id) ON DELETE CASCADE
 );
 
 CREATE TABLE "email".emails_dead_letter
 (
-    id                UUID                     NOT NULL,
+    id                BIGINT                   NOT NULL,
     "from"            TEXT                     NOT NULL,
     "to"              TEXT                     NOT NULL,
     subject           TEXT                     NOT NULL,
     content           TEXT                     NOT NULL,
-    email_template_id UUID                     NOT NULL,
+    email_template_id BIGINT                   NOT NULL,
     created_at        TIMESTAMP WITH TIME ZONE NOT NULL,
     attempt_count     INT                      NOT NULL,
     failed_at         TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
@@ -60,9 +67,8 @@ CREATE TABLE "email".emails_dead_letter
     CONSTRAINT emails_dead_letter_template_fk FOREIGN KEY (email_template_id) REFERENCES "email".email_templates (id) ON DELETE CASCADE
 );
 
-INSERT INTO "email".email_templates (id, name, subject, type, template)
-VALUES (gen_random_uuid(),
-        'user-registered',
+INSERT INTO "email".email_templates (name, subject, type, template)
+VALUES ('user-registered',
         'Activate your account',
         'html',
         '<!DOCTYPE html>

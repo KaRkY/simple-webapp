@@ -11,7 +11,6 @@ import simple.simple_webapp.email.EmailTemplate;
 
 import java.util.Map;
 import java.util.NoSuchElementException;
-import java.util.UUID;
 
 @Service
 public class EmailManagementImpl implements EmailManagement {
@@ -57,7 +56,6 @@ public class EmailManagementImpl implements EmailManagement {
         };
 
         emailDao.saveEmail(new EmailDao.InsertEmail(
-                UUID.randomUUID(),
                 fromAddress,
                 to,
                 renderedSubject,

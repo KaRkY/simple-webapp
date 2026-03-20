@@ -1,15 +1,14 @@
 package simple.simple_webapp.email;
 
 import java.time.OffsetDateTime;
-import java.util.UUID;
 
 public record QueuedEmail(
-        UUID id,
+        Long id,
         String from,
         String to,
         String subject,
         String content,
-        UUID emailTemplateId,
+        Long emailTemplateId,
         EmailTemplateType templateType,
         OffsetDateTime createdAt,
         int attemptCount) {

@@ -4,10 +4,9 @@ import org.jspecify.annotations.Nullable;
 
 import java.time.OffsetDateTime;
 import java.util.List;
-import java.util.UUID;
 
 public record UserRecord(
-        UUID id,
+        Long id,
         String email,
         String password,
         boolean enabled,

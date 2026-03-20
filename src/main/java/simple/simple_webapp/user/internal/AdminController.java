@@ -16,8 +16,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import simple.simple_webapp.user.UserManagement;
 
-import java.util.UUID;
-
 @Controller
 @RequestMapping("/admin")
 @PreAuthorize("hasRole('ADMIN')")
@@ -46,14 +44,14 @@ class AdminController {
 
     @PostMapping("/users/{id}/lock")
     @HxRequest
-    String lockUserHtmx(@PathVariable UUID id, Model model) {
+    String lockUserHtmx(@PathVariable Long id, Model model) {
         userManagement.lockUser(id);
         model.addAttribute("user", userManagement.findById(id));
         return "admin/user-row :: userRow";
     }
 
     @PostMapping("/users/{id}/lock")
-    String lockUser(@PathVariable UUID id) {
+    String lockUser(@PathVariable Long id) {
         userManagement.lockUser(id);
         return "redirect:/admin/users";
     }
@@ -62,14 +60,14 @@ class AdminController {
 
     @PostMapping("/users/{id}/unlock")
     @HxRequest
-    String unlockUserHtmx(@PathVariable UUID id, Model model) {
+    String unlockUserHtmx(@PathVariable Long id, Model model) {
         userManagement.unlockUser(id);
         model.addAttribute("user", userManagement.findById(id));
         return "admin/user-row :: userRow";
     }
 
     @PostMapping("/users/{id}/unlock")
-    String unlockUser(@PathVariable UUID id) {
+    String unlockUser(@PathVariable Long id) {
         userManagement.unlockUser(id);
         return "redirect:/admin/users";
     }
@@ -78,14 +76,14 @@ class AdminController {
 
     @PostMapping("/users/{id}/role")
     @HxRequest
-    String setRoleHtmx(@PathVariable UUID id, @RequestParam UserRole role, Model model) {
+    String setRoleHtmx(@PathVariable Long id, @RequestParam UserRole role, Model model) {
         userManagement.setRole(id, role);
         model.addAttribute("user", userManagement.findById(id));
         return "admin/user-row :: userRow";
     }
 
     @PostMapping("/users/{id}/role")
-    String setRole(@PathVariable UUID id, @RequestParam UserRole role) {
+    String setRole(@PathVariable Long id, @RequestParam UserRole role) {
         userManagement.setRole(id, role);
         return "redirect:/admin/users";
     }
@@ -94,7 +92,7 @@ class AdminController {
 
     @PostMapping("/users/{id}/reset-password")
     @HxRequest
-    String resetPasswordHtmx(@PathVariable UUID id, Model model) {
+    String resetPasswordHtmx(@PathVariable Long id, Model model) {
         var tempPassword = userManagement.resetPassword(id);
         model.addAttribute("user", userManagement.findById(id));
         model.addAttribute("tempPassword", tempPassword);
@@ -102,7 +100,7 @@ class AdminController {
     }
 
     @PostMapping("/users/{id}/reset-password")
-    String resetPassword(@PathVariable UUID id) {
+    String resetPassword(@PathVariable Long id) {
         userManagement.resetPassword(id);
         return "redirect:/admin/users";
     }
@@ -112,7 +110,7 @@ class AdminController {
     @PostMapping("/users/{id}/delete")
     @HxRequest
     @ResponseBody
-    ResponseEntity<String> deleteUserHtmx(@PathVariable UUID id,
+    ResponseEntity<String> deleteUserHtmx(@PathVariable Long id,
                                            @AuthenticationPrincipal UserDetails currentUser) {
         try {
             userManagement.deleteUser(id, currentUser.getUsername());
@@ -123,7 +121,7 @@ class AdminController {
     }
 
     @PostMapping("/users/{id}/delete")
-    String deleteUserFallback(@PathVariable UUID id,
+    String deleteUserFallback(@PathVariable Long id,
                                @AuthenticationPrincipal UserDetails currentUser) {
         try {
             userManagement.deleteUser(id, currentUser.getUsername());
@@ -136,7 +134,7 @@ class AdminController {
 
     @DeleteMapping("/users/{id}")
     @ResponseBody
-    ResponseEntity<String> deleteUser(@PathVariable UUID id,
+    ResponseEntity<String> deleteUser(@PathVariable Long id,
                                       @AuthenticationPrincipal UserDetails currentUser) {
         try {
             userManagement.deleteUser(id, currentUser.getUsername());

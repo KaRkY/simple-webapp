@@ -19,7 +19,6 @@ import simple.simple_webapp.user.UserRegisteredEvent;
 import simple.simple_webapp.user.UserSummary;
 
 import java.util.List;
-import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
@@ -49,8 +48,8 @@ class UserRegisteredEmailPreparerTests {
 
     @Test
     void publishedRegisteredEventQueuesActivationEmail(Scenario scenario) {
-        var userId = UUID.randomUUID();
-        var recipient = "email-" + UUID.randomUUID() + "@example.com";
+        var userId = 1L;
+        var recipient = "email-" + System.nanoTime() + "@example.com";
         when(userManagement.findById(userId)).thenReturn(new UserSummary(
                 userId,
                 recipient,
@@ -79,7 +78,7 @@ class UserRegisteredEmailPreparerTests {
         MimeMessage mimeMessage = mock(MimeMessage.class);
         when(mailSender.createMimeMessage()).thenReturn(mimeMessage);
 
-        scenario.publish(new UserRegisteredEvent(UUID.randomUUID(), null))
+        scenario.publish(new UserRegisteredEvent(2L, null))
                 .andWaitForStateChange(() -> dsl.fetchCount(EMAILS), count -> count == 0);
 
         assertThat(dsl.fetchCount(EMAILS)).isZero();

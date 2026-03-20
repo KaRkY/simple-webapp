@@ -3,7 +3,6 @@ package simple.simple_webapp.user;
 import simple.simple_webapp.user.internal.UserRole;
 
 import java.util.List;
-import java.util.UUID;
 
 public interface UserManagement {
     void register(CreateUser command) throws DuplicateEmailException;
@@ -16,19 +15,19 @@ public interface UserManagement {
 
     void recordSuccessfulLogin(String email);
 
-    UserSummary findById(UUID id);
+    UserSummary findById(Long id);
 
     List<UserSummary> findAll(boolean includeDeleted);
 
-    void lockUser(UUID id);
+    void lockUser(Long id);
 
-    void unlockUser(UUID id);
+    void unlockUser(Long id);
 
-    void setRole(UUID id, UserRole role);
+    void setRole(Long id, UserRole role);
 
     void changePassword(String email, String currentPassword, String newPassword);
 
-    String resetPassword(UUID id);
+    String resetPassword(Long id);
 
-    void deleteUser(UUID id, String currentEmail);
+    void deleteUser(Long id, String currentEmail);
 }

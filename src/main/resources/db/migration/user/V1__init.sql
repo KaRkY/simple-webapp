@@ -1,8 +1,10 @@
 CREATE SCHEMA IF NOT EXISTS "user";
 
+CREATE SEQUENCE "user".users_id_seq AS BIGINT START WITH 1 INCREMENT BY 1;
+
 CREATE TABLE "user".users
 (
-    id                          UUID    NOT NULL,
+    id                          BIGINT  NOT NULL DEFAULT nextval('"user".users_id_seq'),
     email                       TEXT    NOT NULL,
     password                    TEXT    NOT NULL,
     enabled                     BOOLEAN NOT NULL DEFAULT TRUE,
@@ -18,9 +20,11 @@ CREATE TABLE "user".users
     CONSTRAINT users_email_unique UNIQUE (email)
 );
 
+ALTER SEQUENCE "user".users_id_seq OWNED BY "user".users.id;
+
 CREATE TABLE "user".user_roles
 (
-    user_id UUID NOT NULL,
+    user_id BIGINT NOT NULL,
     role    TEXT NOT NULL,
     PRIMARY KEY (user_id, role),
     CONSTRAINT user_roles_user_id_fk FOREIGN KEY (user_id) REFERENCES "user".users (id) ON DELETE CASCADE
