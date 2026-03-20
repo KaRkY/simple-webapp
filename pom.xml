@@ -397,6 +397,8 @@
                                 <locations>
                                     filesystem:src/main/resources/db/migration/inventory
                                 </locations>
+                                <placeholderPrefix>%%{</placeholderPrefix>
+                                <placeholderSuffix>}%%</placeholderSuffix>
                             </flyway>
                             <jooq>
                                 <generator>
@@ -428,6 +430,8 @@
                                 <locations>
                                     filesystem:src/main/resources/db/migration/order
                                 </locations>
+                                <placeholderPrefix>%%{</placeholderPrefix>
+                                <placeholderSuffix>}%%</placeholderSuffix>
                             </flyway>
                             <jooq>
                                 <generator>
@@ -459,6 +463,8 @@
                                 <locations>
                                     filesystem:src/main/resources/db/migration/email
                                 </locations>
+                                <placeholderPrefix>%%{</placeholderPrefix>
+                                <placeholderSuffix>}%%</placeholderSuffix>
                             </flyway>
                             <jooq>
                                 <generator>
@@ -490,6 +496,8 @@
                                 <locations>
                                     filesystem:src/main/resources/db/migration/user
                                 </locations>
+                                <placeholderPrefix>%%{</placeholderPrefix>
+                                <placeholderSuffix>}%%</placeholderSuffix>
                             </flyway>
                             <jooq>
                                 <generator>
