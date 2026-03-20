@@ -90,7 +90,33 @@ Analyze the diff to determine:
 - **Scope**: What area/module is affected?
 - **Description**: One-line summary of what changed (present tense, imperative mood, <72 chars)
 
-### 4. Execute Commit
+### 4. User Approval (Required)
+
+Before executing the commit:
+
+- Display the generated commit message
+- Ask the user for explicit confirmation
+- Do NOT run `git commit` without approval
+
+Example prompt:
+"Proposed commit message:
+
+<message>
+
+Approve commit? (yes/edit/no)"
+
+### 5. Execute Commit (After Approval Only)
+
+Only proceed if the user explicitly approves.
+
+If approved:
+- Run the git commit with the finalized message
+
+If user requests changes:
+- Regenerate or edit the message, then ask for approval again
+
+If rejected:
+- Do not commit
 
 ```bash
 # Single line
@@ -115,6 +141,14 @@ EOF
 - Reference issues: `Closes #123`, `Refs #456`
 - Keep description under 72 characters
 
+### Strict Output Rules
+
+- Output ONLY the commit message (title + optional body)
+- DO NOT include any trailers or attribution lines
+- DO NOT include "Co-authored-by", "Signed-off-by", or similar metadata
+- DO NOT mention GitHub Copilot or any AI assistance
+- DO NOT append any extra lines after the message
+
 ## Git Safety Protocol
 
 - NEVER update git config
@@ -122,3 +156,5 @@ EOF
 - NEVER skip hooks (--no-verify) unless user asks
 - NEVER force push to main/master
 - If commit fails due to hooks, fix and create NEW commit (don't amend)
+- NEVER run `git commit` without explicit user approval
+- ALWAYS show the full commit message before committing
