@@ -1,5 +1,6 @@
 package simple.simple_webapp.email.internal;
 
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.thymeleaf.TemplateEngine;
@@ -8,6 +9,7 @@ import org.thymeleaf.templatemode.TemplateMode;
 import org.thymeleaf.templateresolver.StringTemplateResolver;
 
 @Configuration
+@EnableConfigurationProperties(EmailMonitorProperties.class)
 class EmailConfig {
 
     @Bean

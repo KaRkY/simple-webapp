@@ -2,7 +2,6 @@ package simple.simple_webapp.email.internal;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -17,10 +16,9 @@ class EmailMonitorJob {
     private final EmailDao emailDao;
     private final Duration staleTolerance;
 
-    EmailMonitorJob(EmailDao emailDao,
-                    @Value("${email-monitor.stale-tolerance:PT5M}") Duration staleTolerance) {
+    EmailMonitorJob(EmailDao emailDao, EmailMonitorProperties properties) {
         this.emailDao = emailDao;
-        this.staleTolerance = staleTolerance;
+        this.staleTolerance = properties.staleTolerance();
     }
 
     @Scheduled(cron = "${email-monitor.monitor-cron:0 * * * * *}")
