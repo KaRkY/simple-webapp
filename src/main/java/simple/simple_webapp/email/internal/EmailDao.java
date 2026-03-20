@@ -14,6 +14,7 @@ import java.util.UUID;
 
 import static simple.simple_webapp.email.Tables.EMAILS;
 import static simple.simple_webapp.email.Tables.EMAILS_ARCHIVE;
+import static simple.simple_webapp.email.Tables.EMAILS_DEAD_LETTER;
 import static simple.simple_webapp.email.Tables.EMAIL_TEMPLATES;
 
 @Repository
@@ -44,6 +45,7 @@ public class EmailDao {
     }
 
     List<QueuedEmail> claimBatch(int batchSize) {
+        var now = OffsetDateTime.now();
         var rows = dsl.select(
                         EMAILS.ID,
                         EMAILS.FROM,
@@ -52,11 +54,13 @@ public class EmailDao {
                         EMAILS.CONTENT,
                         EMAILS.EMAIL_TEMPLATE_ID,
                         EMAIL_TEMPLATES.TYPE,
-                        EMAILS.CREATED_AT
+                        EMAILS.CREATED_AT,
+                        EMAILS.ATTEMPT_COUNT
                 )
                 .from(EMAILS)
                 .join(EMAIL_TEMPLATES).on(EMAILS.EMAIL_TEMPLATE_ID.eq(EMAIL_TEMPLATES.ID))
                 .where(EMAILS.STATUS.eq("pending"))
+                .and(EMAILS.NEXT_RETRY_AT.isNull().or(EMAILS.NEXT_RETRY_AT.lessOrEqual(now)))
                 .orderBy(EMAILS.CREATED_AT.asc(), EMAILS.ID.asc())
                 .limit(batchSize)
                 .forUpdate()
@@ -75,20 +79,51 @@ public class EmailDao {
         return rows;
     }
 
-    void releaseEmail(UUID id) {
+    List<QueuedEmail> claimStaleProcessing(OffsetDateTime olderThan) {
+        return dsl.select(
+                        EMAILS.ID,
+                        EMAILS.FROM,
+                        EMAILS.TO,
+                        EMAILS.SUBJECT,
+                        EMAILS.CONTENT,
+                        EMAILS.EMAIL_TEMPLATE_ID,
+                        EMAIL_TEMPLATES.TYPE,
+                        EMAILS.CREATED_AT,
+                        EMAILS.ATTEMPT_COUNT
+                )
+                .from(EMAILS)
+                .join(EMAIL_TEMPLATES).on(EMAILS.EMAIL_TEMPLATE_ID.eq(EMAIL_TEMPLATES.ID))
+                .where(EMAILS.STATUS.eq("processing"))
+                .and(EMAILS.PROCESSING_SINCE.lessThan(olderThan))
+                .forUpdate()
+                .skipLocked()
+                .fetch(this::toQueuedEmail);
+    }
+
+    void failEmail(UUID id, int newAttemptCount, OffsetDateTime nextRetryAt) {
         dsl.update(EMAILS)
                 .set(EMAILS.STATUS, "pending")
+                .set(EMAILS.ATTEMPT_COUNT, newAttemptCount)
+                .set(EMAILS.NEXT_RETRY_AT, nextRetryAt)
                 .setNull(EMAILS.PROCESSING_SINCE)
                 .where(EMAILS.ID.eq(id))
                 .execute();
     }
 
-    int releaseStaleEmails(OffsetDateTime olderThan) {
-        return dsl.update(EMAILS)
-                .set(EMAILS.STATUS, "pending")
-                .setNull(EMAILS.PROCESSING_SINCE)
-                .where(EMAILS.STATUS.eq("processing"))
-                .and(EMAILS.PROCESSING_SINCE.lessThan(olderThan))
+    void moveToDeadLetter(QueuedEmail email, int finalAttemptCount) {
+        dsl.insertInto(EMAILS_DEAD_LETTER)
+                .set(EMAILS_DEAD_LETTER.ID, email.id())
+                .set(EMAILS_DEAD_LETTER.FROM, email.from())
+                .set(EMAILS_DEAD_LETTER.TO, email.to())
+                .set(EMAILS_DEAD_LETTER.SUBJECT, email.subject())
+                .set(EMAILS_DEAD_LETTER.CONTENT, email.content())
+                .set(EMAILS_DEAD_LETTER.EMAIL_TEMPLATE_ID, email.emailTemplateId())
+                .set(EMAILS_DEAD_LETTER.CREATED_AT, email.createdAt())
+                .set(EMAILS_DEAD_LETTER.ATTEMPT_COUNT, finalAttemptCount)
+                .execute();
+
+        dsl.deleteFrom(EMAILS)
+                .where(EMAILS.ID.eq(email.id()))
                 .execute();
     }
 
@@ -127,7 +162,8 @@ public class EmailDao {
                 r.get(EMAILS.CONTENT),
                 r.get(EMAILS.EMAIL_TEMPLATE_ID),
                 EmailTemplateType.fromString(r.get(EMAIL_TEMPLATES.TYPE)),
-                r.get(EMAILS.CREATED_AT)
+                r.get(EMAILS.CREATED_AT),
+                r.get(EMAILS.ATTEMPT_COUNT)
         );
     }
 

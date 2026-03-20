@@ -14,19 +14,22 @@ class EmailMonitorJob {
     private static final Logger log = LoggerFactory.getLogger(EmailMonitorJob.class);
 
     private final EmailDao emailDao;
+    private final EmailRetryService retryService;
     private final Duration staleTolerance;
 
-    EmailMonitorJob(EmailDao emailDao, EmailMonitorProperties properties) {
+    EmailMonitorJob(EmailDao emailDao, EmailRetryService retryService, EmailMonitorProperties properties) {
         this.emailDao = emailDao;
+        this.retryService = retryService;
         this.staleTolerance = properties.staleTolerance();
     }
 
     @Scheduled(cron = "${email-monitor.monitor-cron:0 * * * * *}")
     void run() {
         var cutoff = OffsetDateTime.now().minus(staleTolerance);
-        int released = emailDao.releaseStaleEmails(cutoff);
-        if (released > 0) {
-            log.warn("Released {} stale processing email(s) back to pending", released);
+        var stale = emailDao.claimStaleProcessing(cutoff);
+        if (!stale.isEmpty()) {
+            log.warn("Found {} stale processing email(s), applying retry logic", stale.size());
+            stale.forEach(retryService::handleFailure);
         }
     }
 }

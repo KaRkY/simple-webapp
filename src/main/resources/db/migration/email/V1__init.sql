@@ -23,6 +23,8 @@ CREATE TABLE "email".emails
     status            TEXT                     NOT NULL DEFAULT 'pending'
         CONSTRAINT emails_status_check CHECK (status IN ('pending', 'processing')),
     processing_since  TIMESTAMP WITH TIME ZONE NULL,
+    attempt_count     INT                      NOT NULL DEFAULT 0,
+    next_retry_at     TIMESTAMP WITH TIME ZONE NULL,
     PRIMARY KEY (id),
     CONSTRAINT emails_email_template_fk FOREIGN KEY (email_template_id) REFERENCES "email".email_templates (id) ON DELETE CASCADE
 );
@@ -41,6 +43,21 @@ CREATE TABLE "email".emails_archive
     email_template_id UUID                     NOT NULL,
     PRIMARY KEY (id),
     CONSTRAINT emails_archive_email_template_fk FOREIGN KEY (email_template_id) REFERENCES "email".email_templates (id) ON DELETE CASCADE
+);
+
+CREATE TABLE "email".emails_dead_letter
+(
+    id                UUID                     NOT NULL,
+    "from"            TEXT                     NOT NULL,
+    "to"              TEXT                     NOT NULL,
+    subject           TEXT                     NOT NULL,
+    content           TEXT                     NOT NULL,
+    email_template_id UUID                     NOT NULL,
+    created_at        TIMESTAMP WITH TIME ZONE NOT NULL,
+    attempt_count     INT                      NOT NULL,
+    failed_at         TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+    PRIMARY KEY (id),
+    CONSTRAINT emails_dead_letter_template_fk FOREIGN KEY (email_template_id) REFERENCES "email".email_templates (id) ON DELETE CASCADE
 );
 
 INSERT INTO "email".email_templates (id, name, subject, type, template)

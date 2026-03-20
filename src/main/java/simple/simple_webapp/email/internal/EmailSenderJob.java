@@ -21,11 +21,13 @@ public class EmailSenderJob {
 
     private final EmailDao emailDao;
     private final JavaMailSender mailSender;
+    private final EmailRetryService retryService;
     private final int batchSize;
 
-    EmailSenderJob(EmailDao emailDao, JavaMailSender mailSender, EmailMonitorProperties properties) {
+    EmailSenderJob(EmailDao emailDao, JavaMailSender mailSender, EmailRetryService retryService, EmailMonitorProperties properties) {
         this.emailDao = emailDao;
         this.mailSender = mailSender;
+        this.retryService = retryService;
         this.batchSize = properties.batchSize();
     }
 
@@ -41,7 +43,7 @@ public class EmailSenderJob {
                 emailDao.archiveEmail(email, OffsetDateTime.now());
             } catch (MailException | MessagingException e) {
                 log.error("Failed to send email {}", email.id(), e);
-                emailDao.releaseEmail(email.id());
+                retryService.handleFailure(email);
             }
         }
     }

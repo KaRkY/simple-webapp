@@ -31,6 +31,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 import static simple.simple_webapp.email.Tables.EMAILS;
 import static simple.simple_webapp.email.Tables.EMAILS_ARCHIVE;
+import static simple.simple_webapp.email.Tables.EMAILS_DEAD_LETTER;
 import static simple.simple_webapp.email.Tables.EMAIL_TEMPLATES;
 
 @ApplicationModuleTest(module = "email")
@@ -60,6 +61,7 @@ class EmailManagementTests {
     void after() {
         dsl.deleteFrom(EMAILS).execute();
         dsl.deleteFrom(EMAILS_ARCHIVE).execute();
+        dsl.deleteFrom(EMAILS_DEAD_LETTER).execute();
     }
 
     @Test
@@ -156,9 +158,71 @@ class EmailManagementTests {
 
         emailSenderJob.run();
 
-        assertThat(dsl.fetchCount(EMAILS, EMAILS.TO.eq(recipient))).isEqualTo(1);
-        assertThat(dsl.selectFrom(EMAILS).where(EMAILS.TO.eq(recipient)).fetchOne(EMAILS.STATUS)).isEqualTo("pending");
+        var record = dsl.selectFrom(EMAILS).where(EMAILS.TO.eq(recipient)).fetchOne();
+        assertThat(record).isNotNull();
+        assertThat(record.getStatus()).isEqualTo("pending");
+        assertThat(record.getAttemptCount()).isEqualTo(1);
+        assertThat(record.getNextRetryAt()).isNotNull().isAfter(OffsetDateTime.now().minusSeconds(1));
         assertThat(dsl.fetchCount(EMAILS_ARCHIVE, EMAILS_ARCHIVE.TO.eq(recipient))).isZero();
+    }
+
+    @Test
+    void senderJobIncrementsAttemptCountAndBacksOff() throws Exception {
+        var templateName = insertTemplate(
+                EmailTemplateType.HTML,
+                "HTML subject",
+                "<p>Click [[${activationUrl}]]</p>"
+        );
+        var recipient = uniqueEmail();
+        emailManagement.queueEmail(recipient, templateName, Map.of("activationUrl", "http://localhost:8080/activate?token=abc"));
+
+        // Simulate 2 prior attempts — next_retry_at in the past so the job picks it up
+        dsl.update(EMAILS)
+                .set(EMAILS.ATTEMPT_COUNT, 2)
+                .set(EMAILS.NEXT_RETRY_AT, OffsetDateTime.now().minusMinutes(1))
+                .where(EMAILS.TO.eq(recipient))
+                .execute();
+
+        var mimeMessage = new jakarta.mail.internet.MimeMessage(Session.getInstance(new Properties()));
+        when(mailSender.createMimeMessage()).thenReturn(mimeMessage);
+        doThrow(new MailSendException("boom")).when(mailSender).send(eq(mimeMessage));
+
+        emailSenderJob.run();
+
+        var record = dsl.selectFrom(EMAILS).where(EMAILS.TO.eq(recipient)).fetchOne();
+        assertThat(record).isNotNull();
+        assertThat(record.getAttemptCount()).isEqualTo(3);
+        // delay = 1min * 2^2 = 4min
+        assertThat(record.getNextRetryAt()).isAfter(OffsetDateTime.now().plusMinutes(3));
+    }
+
+    @Test
+    void senderJobMovesEmailToDeadLetterAfterMaxAttempts() throws Exception {
+        var templateName = insertTemplate(
+                EmailTemplateType.HTML,
+                "HTML subject",
+                "<p>Click [[${activationUrl}]]</p>"
+        );
+        var recipient = uniqueEmail();
+        emailManagement.queueEmail(recipient, templateName, Map.of("activationUrl", "http://localhost:8080/activate?token=abc"));
+
+        // maxAttempts default = 5; set attempt_count to 4 (one away from exhaustion)
+        dsl.update(EMAILS)
+                .set(EMAILS.ATTEMPT_COUNT, 4)
+                .set(EMAILS.NEXT_RETRY_AT, OffsetDateTime.now().minusMinutes(1))
+                .where(EMAILS.TO.eq(recipient))
+                .execute();
+
+        var mimeMessage = new jakarta.mail.internet.MimeMessage(Session.getInstance(new Properties()));
+        when(mailSender.createMimeMessage()).thenReturn(mimeMessage);
+        doThrow(new MailSendException("boom")).when(mailSender).send(eq(mimeMessage));
+
+        emailSenderJob.run();
+
+        assertThat(dsl.fetchCount(EMAILS, EMAILS.TO.eq(recipient))).isZero();
+        var deadRecord = dsl.selectFrom(EMAILS_DEAD_LETTER).where(EMAILS_DEAD_LETTER.TO.eq(recipient)).fetchOne();
+        assertThat(deadRecord).isNotNull();
+        assertThat(deadRecord.getAttemptCount()).isEqualTo(5);
     }
 
     @Test
@@ -181,10 +245,10 @@ class EmailManagementTests {
         var recipient = uniqueEmail();
         emailManagement.queueEmail(recipient, templateName, Map.of());
 
-        // simulate a stale claim (processing_since 1 hour ago)
+        // simulate a stale claim (processing_since 1 hour ago, attempt_count already 0)
         dsl.update(EMAILS)
                 .set(EMAILS.STATUS, "processing")
-                .set(EMAILS.PROCESSING_SINCE, java.time.OffsetDateTime.now().minusHours(1))
+                .set(EMAILS.PROCESSING_SINCE, OffsetDateTime.now().minusHours(1))
                 .where(EMAILS.TO.eq(recipient))
                 .execute();
 
@@ -194,6 +258,30 @@ class EmailManagementTests {
         assertThat(record).isNotNull();
         assertThat(record.getStatus()).isEqualTo("pending");
         assertThat(record.getProcessingSince()).isNull();
+        assertThat(record.getAttemptCount()).isEqualTo(1);
+        assertThat(record.getNextRetryAt()).isNotNull().isAfter(OffsetDateTime.now().minusSeconds(1));
+    }
+
+    @Test
+    void monitorJobMovesStaleEmailToDeadLetterAfterMaxAttempts() {
+        var templateName = insertTemplate(EmailTemplateType.TEXT, "Subject", "Body");
+        var recipient = uniqueEmail();
+        emailManagement.queueEmail(recipient, templateName, Map.of());
+
+        // maxAttempts default = 5; set attempt_count to 4 while stuck in processing
+        dsl.update(EMAILS)
+                .set(EMAILS.STATUS, "processing")
+                .set(EMAILS.PROCESSING_SINCE, OffsetDateTime.now().minusHours(1))
+                .set(EMAILS.ATTEMPT_COUNT, 4)
+                .where(EMAILS.TO.eq(recipient))
+                .execute();
+
+        emailMonitorJob.run();
+
+        assertThat(dsl.fetchCount(EMAILS, EMAILS.TO.eq(recipient))).isZero();
+        var deadRecord = dsl.selectFrom(EMAILS_DEAD_LETTER).where(EMAILS_DEAD_LETTER.TO.eq(recipient)).fetchOne();
+        assertThat(deadRecord).isNotNull();
+        assertThat(deadRecord.getAttemptCount()).isEqualTo(5);
     }
 
     private String insertTemplate(EmailTemplateType type, String subject, String template) {

@@ -11,5 +11,6 @@ public record QueuedEmail(
         String content,
         UUID emailTemplateId,
         EmailTemplateType templateType,
-        OffsetDateTime createdAt) {
+        OffsetDateTime createdAt,
+        int attemptCount) {
 }

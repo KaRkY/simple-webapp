@@ -10,5 +10,7 @@ record EmailMonitorProperties(
         @DefaultValue("0/2 * * * * *") String cron,
         @DefaultValue("10") int batchSize,
         @DefaultValue("PT5M") Duration staleTolerance,
-        @DefaultValue("0 * * * * *") String monitorCron) {
+        @DefaultValue("0 * * * * *") String monitorCron,
+        @DefaultValue("5") int maxAttempts,
+        @DefaultValue("PT1M") Duration initialBackoffDelay) {
 }
