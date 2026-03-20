@@ -20,9 +20,15 @@ CREATE TABLE "email".emails
     content           TEXT                     NOT NULL,
     email_template_id UUID                     NOT NULL,
     created_at        TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+    status            TEXT                     NOT NULL DEFAULT 'pending'
+        CONSTRAINT emails_status_check CHECK (status IN ('pending', 'processing')),
+    processing_since  TIMESTAMP WITH TIME ZONE NULL,
     PRIMARY KEY (id),
     CONSTRAINT emails_email_template_fk FOREIGN KEY (email_template_id) REFERENCES "email".email_templates (id) ON DELETE CASCADE
 );
+
+CREATE INDEX emails_pending_idx ON "email".emails (created_at, id)
+    WHERE status = 'pending';
 
 CREATE TABLE "email".emails_archive
 (

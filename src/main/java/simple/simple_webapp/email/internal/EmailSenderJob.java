@@ -3,12 +3,14 @@ package simple.simple_webapp.email.internal;
 import jakarta.mail.MessagingException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.MailException;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import simple.simple_webapp.email.QueuedEmail;
 
 import java.time.OffsetDateTime;
@@ -20,27 +22,28 @@ public class EmailSenderJob {
 
     private final EmailDao emailDao;
     private final JavaMailSender mailSender;
+    private final int batchSize;
 
-    EmailSenderJob(EmailDao emailDao, JavaMailSender mailSender) {
+    EmailSenderJob(EmailDao emailDao, JavaMailSender mailSender,
+                   @Value("${email-monitor.batch-size:10}") int batchSize) {
         this.emailDao = emailDao;
         this.mailSender = mailSender;
+        this.batchSize = batchSize;
     }
 
     @Scheduled(cron = "${email-monitor.cron:0/2 * * * * *}")
+    @Transactional
     void run() {
-        for (var email : emailDao.findPendingEmails()) {
+        for (var email : emailDao.claimBatch(batchSize)) {
             try {
                 switch (email.templateType()) {
-                    case TEXT -> {
-                        send(email);
-                    }
-                    case HTML -> {
-                        sendHtml(email);
-                    }
+                    case TEXT -> send(email);
+                    case HTML -> sendHtml(email);
                 }
                 emailDao.archiveEmail(email, OffsetDateTime.now());
             } catch (MailException | MessagingException e) {
                 log.error("Failed to send email {}", email.id(), e);
+                emailDao.releaseEmail(email.id());
             }
         }
     }

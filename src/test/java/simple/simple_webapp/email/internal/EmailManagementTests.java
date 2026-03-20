@@ -20,6 +20,7 @@ import simple.simple_webapp.TestcontainersConfiguration;
 import simple.simple_webapp.email.EmailTemplateType;
 import simple.simple_webapp.user.UserManagement;
 
+import java.time.OffsetDateTime;
 import java.util.Map;
 import java.util.Properties;
 import java.util.UUID;
@@ -42,6 +43,8 @@ class EmailManagementTests {
     @Autowired
     EmailSenderJob emailSenderJob;
     @Autowired
+    EmailMonitorJob emailMonitorJob;
+    @Autowired
     DSLContext dsl;
     @Autowired
     JavaMailSender mailSender;
@@ -56,6 +59,7 @@ class EmailManagementTests {
     @AfterEach
     void after() {
         dsl.deleteFrom(EMAILS).execute();
+        dsl.deleteFrom(EMAILS_ARCHIVE).execute();
     }
 
     @Test
@@ -153,7 +157,43 @@ class EmailManagementTests {
         emailSenderJob.run();
 
         assertThat(dsl.fetchCount(EMAILS, EMAILS.TO.eq(recipient))).isEqualTo(1);
+        assertThat(dsl.selectFrom(EMAILS).where(EMAILS.TO.eq(recipient)).fetchOne(EMAILS.STATUS)).isEqualTo("pending");
         assertThat(dsl.fetchCount(EMAILS_ARCHIVE, EMAILS_ARCHIVE.TO.eq(recipient))).isZero();
+    }
+
+    @Test
+    void senderJobRespectsConfiguredBatchSize() {
+        var templateName = insertTemplate(EmailTemplateType.TEXT, "Subject", "Body");
+        // default batch size is 10; insert 11 emails
+        for (int i = 0; i < 11; i++) {
+            emailManagement.queueEmail(uniqueEmail(), templateName, Map.of());
+        }
+
+        emailSenderJob.run();
+
+        assertThat(dsl.fetchCount(EMAILS_ARCHIVE)).isEqualTo(10);
+        assertThat(dsl.fetchCount(EMAILS)).isEqualTo(1);
+    }
+
+    @Test
+    void monitorJobReleasesStaleProcessingEmails() {
+        var templateName = insertTemplate(EmailTemplateType.TEXT, "Subject", "Body");
+        var recipient = uniqueEmail();
+        emailManagement.queueEmail(recipient, templateName, Map.of());
+
+        // simulate a stale claim (processing_since 1 hour ago)
+        dsl.update(EMAILS)
+                .set(EMAILS.STATUS, "processing")
+                .set(EMAILS.PROCESSING_SINCE, java.time.OffsetDateTime.now().minusHours(1))
+                .where(EMAILS.TO.eq(recipient))
+                .execute();
+
+        emailMonitorJob.run();
+
+        var record = dsl.selectFrom(EMAILS).where(EMAILS.TO.eq(recipient)).fetchOne();
+        assertThat(record).isNotNull();
+        assertThat(record.getStatus()).isEqualTo("pending");
+        assertThat(record.getProcessingSince()).isNull();
     }
 
     private String insertTemplate(EmailTemplateType type, String subject, String template) {

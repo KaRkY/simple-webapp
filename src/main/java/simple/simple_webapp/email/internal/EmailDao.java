@@ -43,8 +43,8 @@ public class EmailDao {
                 .execute();
     }
 
-    List<QueuedEmail> findPendingEmails() {
-        return dsl.select(
+    List<QueuedEmail> claimBatch(int batchSize) {
+        var rows = dsl.select(
                         EMAILS.ID,
                         EMAILS.FROM,
                         EMAILS.TO,
@@ -56,8 +56,40 @@ public class EmailDao {
                 )
                 .from(EMAILS)
                 .join(EMAIL_TEMPLATES).on(EMAILS.EMAIL_TEMPLATE_ID.eq(EMAIL_TEMPLATES.ID))
+                .where(EMAILS.STATUS.eq("pending"))
                 .orderBy(EMAILS.CREATED_AT.asc(), EMAILS.ID.asc())
+                .limit(batchSize)
+                .forUpdate()
+                .skipLocked()
                 .fetch(this::toQueuedEmail);
+
+        if (!rows.isEmpty()) {
+            var ids = rows.stream().map(QueuedEmail::id).toList();
+            dsl.update(EMAILS)
+                    .set(EMAILS.STATUS, "processing")
+                    .set(EMAILS.PROCESSING_SINCE, OffsetDateTime.now())
+                    .where(EMAILS.ID.in(ids))
+                    .execute();
+        }
+
+        return rows;
+    }
+
+    void releaseEmail(UUID id) {
+        dsl.update(EMAILS)
+                .set(EMAILS.STATUS, "pending")
+                .setNull(EMAILS.PROCESSING_SINCE)
+                .where(EMAILS.ID.eq(id))
+                .execute();
+    }
+
+    int releaseStaleEmails(OffsetDateTime olderThan) {
+        return dsl.update(EMAILS)
+                .set(EMAILS.STATUS, "pending")
+                .setNull(EMAILS.PROCESSING_SINCE)
+                .where(EMAILS.STATUS.eq("processing"))
+                .and(EMAILS.PROCESSING_SINCE.lessThan(olderThan))
+                .execute();
     }
 
     void archiveEmail(QueuedEmail email, OffsetDateTime sentAt) {
