@@ -23,7 +23,16 @@
 
 ## Architecture
 
-This is a **Spring Modulith modular monolith** with two domain modules: `order` and `inventory`. Modules communicate exclusively through **domain events** — no direct cross-module bean injection.
+This is a **Spring Modulith 2 (v2.0.3) modular monolith** with two domain modules: `order` and `inventory`. Modules communicate exclusively through **domain events** — no direct cross-module bean injection.
+
+**Spring Modulith 2 starters in use:**
+- `spring-modulith-starter-core` — module detection, boundary enforcement, `@ApplicationModuleListener`
+- `spring-modulith-starter-jdbc` — JDBC-backed event publication journal (`event_publication` / `event_publication_archive`)
+- `spring-modulith-starter-test` — `Scenario` DSL, `@EnableScenarios`, module integration test support
+- `spring-modulith-actuator` — `/actuator/modulith` endpoint exposing module metadata
+- `spring-modulith-observability` — distributed tracing spans per module interaction
+
+All starters are version-managed via the `spring-modulith-bom` BOM (no individual version pins needed).
 
 ```
 simple.simple_webapp/
